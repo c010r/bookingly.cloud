@@ -141,20 +141,23 @@ export async function fetchFeed(source: Source): Promise<FeedItem[]> {
 /** Descarga el articulo completo; si falla, nos quedamos con el resumen del RSS. */
 export async function fetchArticleText(
   item: FeedItem
-): Promise<{ text: string; image: string | null }> {
+): Promise<{ text: string; image: string | null; author: string | null }> {
   // Las fuentes de API ya entregan su propio material.
-  if (item.content) return { text: item.content, image: item.image };
+  if (item.content) return { text: item.content, image: item.image, author: item.author };
 
   try {
     const article = await extract(item.link);
     const text = stripHtml(article?.content || "").trim();
+    // Muchos feeds no traen dc:creator pero la pagina si lleva firma.
+    const author = item.author ?? limpiarAutor(article?.author);
     if (text.length > 400) {
-      return { text, image: item.image || article?.image || null };
+      return { text, image: item.image || article?.image || null, author };
     }
+    return { text: item.summary, image: item.image, author };
   } catch {
     // Muchos medios bloquean bots; caemos al resumen sin dramatizar.
   }
-  return { text: item.summary, image: item.image };
+  return { text: item.summary, image: item.image, author: item.author };
 }
 
 export type IngestOptions = {
@@ -272,7 +275,7 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
       }
 
       try {
-        const { text, image } = await fetchArticleText(item);
+        const { text, image, author } = await fetchArticleText(item);
         if (text.trim().length < 200) {
           report.skipped++;
           log(`Sin texto suficiente, se salta: ${item.title}`);
@@ -322,7 +325,7 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
             source.name,
             item.link,
             item.title,
-            item.author ?? null,
+            author ?? null,
             item.publishedAt,
             fp,
             titleKey(item.title),
@@ -429,6 +432,11 @@ function pickAuthor(item: Record<string, unknown>): string | null {
     item.author ??
     (item.author as { name?: string } | undefined)?.name;
 
+  return limpiarAutor(bruto);
+}
+
+/** Normaliza una firma y descarta las que no identifican a nadie. */
+export function limpiarAutor(bruto: unknown): string | null {
   if (typeof bruto !== "string") return null;
 
   const limpio = bruto

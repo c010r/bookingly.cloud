@@ -30,7 +30,7 @@ export const env = {
     return required("CRON_SECRET");
   },
   get maxPerRun() {
-    return Number(process.env.INGEST_MAX_PER_RUN || 12);
+    return Number(process.env.INGEST_MAX_PER_RUN || 6);
   },
   /** Opcional: sube el limite de la API de GitHub de 60 a 5000 peticiones/hora. */
   get githubToken() {
