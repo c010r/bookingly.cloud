@@ -6,7 +6,11 @@ import { ingestAction } from "./actions";
 function Button() {
   const { pending } = useFormStatus();
   return (
-    <button className="btn btn-primary" type="submit" disabled={pending}>
+    <button
+      type="submit"
+      disabled={pending}
+      className="rounded-lg border border-neon bg-neon px-4 py-2.5 text-sm font-semibold text-bg transition-opacity hover:opacity-85 disabled:opacity-50"
+    >
       {pending ? "Buscando y reescribiendo..." : "Ingerir noticias"}
     </button>
   );

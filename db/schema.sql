@@ -68,3 +68,8 @@ ALTER TABLE ingest_runs ADD COLUMN IF NOT EXISTS duplicates INTEGER NOT NULL DEF
 ALTER TABLE ingest_runs ADD COLUMN IF NOT EXISTS published  INTEGER NOT NULL DEFAULT 0;
 
 ALTER TABLE sources ADD COLUMN IF NOT EXISTS category TEXT;
+
+-- Contador de visitas, para el bloque de "mas leidas" del hero.
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS views INTEGER NOT NULL DEFAULT 0;
+CREATE INDEX IF NOT EXISTS articles_views_idx
+  ON articles (views DESC) WHERE status = 'published';

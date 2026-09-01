@@ -2,47 +2,57 @@ import Link from "next/link";
 import type { Article } from "@/lib/repo";
 import { excerpt } from "@/lib/markdown";
 import { categoryName } from "@/lib/categories";
-
-export function formatDate(d: Date | string | null): string {
-  if (!d) return "";
-  const date = typeof d === "string" ? new Date(d) : d;
-  return date.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
-}
+import { formatDate } from "@/lib/format";
 
 export default function ArticleCard({
   article,
-  featured = false,
+  index = 0,
 }: {
   article: Article;
-  featured?: boolean;
+  index?: number;
 }) {
   const extra = article.extra_sources?.length ?? 0;
 
   return (
-    <article className={featured ? "card featured" : "card"}>
-      {article.image_url ? (
-        // Imagen remota del medio original: <img> plano evita configurar dominios.
-        // eslint-disable-next-line @next/next/no-img-element
-        <img className="thumb" src={article.image_url} alt="" loading="lazy" />
-      ) : null}
-      <div className="body">
-        <Link href={`/categoria/${article.category}`} className="kicker">
-          {categoryName(article.category)}
-        </Link>
-        <h3>
-          <Link href={`/noticia/${article.slug}`}>{article.title}</Link>
-        </h3>
-        <p>{article.dek || excerpt(article.body_md)}</p>
-        <div className="meta">
-          <span>{formatDate(article.published_at)}</span>
-          <span className="dot">·</span>
-          <span>{article.reading_minutes} min</span>
-          <span className="dot">·</span>
-          <span className="source-chip">
-            {extra > 0 ? `${extra + 1} fuentes` : `vía ${article.source_name}`}
+    <article
+      className="edge-glow rise group flex flex-col overflow-hidden rounded-xl border border-line bg-surface transition-transform duration-300 hover:-translate-y-1"
+      style={{ animationDelay: `${Math.min(index, 8) * 55}ms` }}
+    >
+      <Link href={`/noticia/${article.slug}`} className="flex h-full flex-col">
+        {article.image_url && (
+          <div className="overflow-hidden border-b border-line">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={article.image_url}
+              alt=""
+              loading="lazy"
+              className="aspect-[16/9] w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+            />
+          </div>
+        )}
+
+        <div className="flex flex-1 flex-col gap-2.5 p-5">
+          <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-neon">
+            {categoryName(article.category)}
           </span>
+
+          <h3 className="text-[17px] leading-snug font-semibold tracking-tight text-pretty transition-colors group-hover:text-neon">
+            {article.title}
+          </h3>
+
+          <p className="text-[13.5px] leading-relaxed text-fg-muted">
+            {article.dek || excerpt(article.body_md)}
+          </p>
+
+          <div className="mt-auto flex flex-wrap items-center gap-2 pt-2 font-mono text-[11px] text-fg-faint">
+            <time>{formatDate(article.published_at)}</time>
+            <span className="opacity-40">·</span>
+            <span>{article.reading_minutes} min</span>
+            <span className="opacity-40">·</span>
+            <span>{extra > 0 ? `${extra + 1} fuentes` : article.source_name}</span>
+          </div>
         </div>
-      </div>
+      </Link>
     </article>
   );
 }

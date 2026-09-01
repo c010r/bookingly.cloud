@@ -3,8 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBySlug, getRelated } from "@/lib/repo";
 import { renderMarkdown } from "@/lib/markdown";
-import ArticleCard, { formatDate } from "@/components/ArticleCard";
+import ArticleCard from "@/components/ArticleCard";
+import SectionTitle from "@/components/SectionTitle";
+import ViewCounter from "@/components/ViewCounter";
 import { categoryName } from "@/lib/categories";
+import { formatDate } from "@/lib/format";
 import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +39,7 @@ export default async function ArticlePage({ params }: Params) {
   const article = await getBySlug(slug);
   if (!article) notFound();
 
-  const related = article.tags.length ? await getRelated(article) : [];
+  const related = await getRelated(article);
   const html = renderMarkdown(article.body_md);
 
   const jsonLd = {
@@ -54,40 +57,62 @@ export default async function ArticlePage({ params }: Params) {
   };
 
   return (
-    <article className="article">
-      <div className="meta">
-        <Link href={`/categoria/${article.category}`} className="kicker">
+    <article className="mx-auto max-w-[46rem] py-12">
+      <ViewCounter slug={article.slug} />
+
+      <div className="mb-4 flex flex-wrap items-center gap-2.5 font-mono text-[11.5px] text-fg-faint">
+        <Link
+          href={`/categoria/${article.category}`}
+          className="font-semibold uppercase tracking-[0.14em] text-neon transition-opacity hover:opacity-75"
+        >
           {categoryName(article.category)}
         </Link>
-        <span className="dot">·</span>
-        <span>{formatDate(article.published_at)}</span>
-        <span className="dot">·</span>
+        <span className="opacity-40">·</span>
+        <time>{formatDate(article.published_at)}</time>
+        <span className="opacity-40">·</span>
         <span>{article.reading_minutes} min de lectura</span>
       </div>
 
-      <h1>{article.title}</h1>
-      {article.dek && <p className="dek">{article.dek}</p>}
+      <h1 className="text-3xl leading-[1.12] font-bold tracking-tight text-balance sm:text-[2.7rem]">
+        {article.title}
+      </h1>
 
-      {article.image_url && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img className="hero-img" src={article.image_url} alt="" />
+      {article.dek && (
+        <p className="mt-5 text-lg leading-relaxed text-fg-muted sm:text-xl">{article.dek}</p>
       )}
 
-      <div className="prose" dangerouslySetInnerHTML={{ __html: html }} />
+      {article.image_url && (
+        <div className="my-8 overflow-hidden rounded-xl border border-line">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={article.image_url} alt="" className="w-full" />
+        </div>
+      )}
 
-      <aside className="attribution">
-        Basado en la informacion publicada por <strong>{article.source_name}</strong>:{" "}
-        <a href={article.source_url} target="_blank" rel="noopener nofollow">
+      <div className="prose-news mt-8" dangerouslySetInnerHTML={{ __html: html }} />
+
+      <aside className="mt-12 rounded-xl border border-line border-l-2 border-l-neon bg-surface p-5 text-[13.5px] leading-relaxed text-fg-muted">
+        Basado en la informacion publicada por <strong className="text-fg">{article.source_name}</strong>:{" "}
+        <a
+          href={article.source_url}
+          target="_blank"
+          rel="noopener nofollow"
+          className="text-neon-2 underline underline-offset-4"
+        >
           {article.source_title}
         </a>
         {article.extra_sources?.length > 0 && (
           <>
-            <div style={{ marginTop: 10 }}>Otros medios que cubrieron esta noticia:</div>
-            <ul>
+            <p className="mt-3 mb-1">Otros medios que cubrieron esta noticia:</p>
+            <ul className="list-disc space-y-1 pl-5">
               {article.extra_sources.map((s) => (
                 <li key={s.url}>
-                  <strong>{s.name}</strong>:{" "}
-                  <a href={s.url} target="_blank" rel="noopener nofollow">
+                  <strong className="text-fg">{s.name}</strong>:{" "}
+                  <a
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener nofollow"
+                    className="text-neon-2 underline underline-offset-4"
+                  >
                     {s.title}
                   </a>
                 </li>
@@ -95,18 +120,18 @@ export default async function ArticlePage({ params }: Params) {
             </ul>
           </>
         )}
-        <span className="note">
-          Texto reelaborado por la redaccion de {env.siteName} con asistencia de IA. Los datos y
-          declaraciones proceden de las fuentes originales enlazadas.
+        <span className="mt-3 block text-xs text-fg-faint">
+          Texto reelaborado por la redaccion de {env.siteName}. Los datos y declaraciones proceden
+          de las fuentes originales enlazadas.
         </span>
       </aside>
 
       {related.length > 0 && (
         <>
-          <div className="section-title">Relacionado</div>
-          <div className="grid">
-            {related.map((a) => (
-              <ArticleCard key={a.id} article={a} />
+          <SectionTitle>Relacionado</SectionTitle>
+          <div className="grid gap-6 sm:grid-cols-2">
+            {related.map((a, i) => (
+              <ArticleCard key={a.id} article={a} index={i} />
             ))}
           </div>
         </>

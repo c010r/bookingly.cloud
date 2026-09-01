@@ -24,6 +24,7 @@ export type Article = {
   seo_description: string | null;
   image_url: string | null;
   reading_minutes: number;
+  views: number;
   model: string | null;
   created_at: Date;
   updated_at: Date;
@@ -33,7 +34,7 @@ export type Article = {
 const COLUMNS = `id, source_id, source_name, source_url, source_title, source_published_at,
   status, title, slug, dek, body_md, tags, category, extra_sources, quality_score,
   quality_notes, auto_published, seo_title, seo_description, image_url,
-  reading_minutes, model, created_at, updated_at, published_at`;
+  reading_minutes, views, model, created_at, updated_at, published_at`;
 
 export async function getPublished(limit = 20, offset = 0): Promise<Article[]> {
   return query<Article>(
@@ -50,6 +51,36 @@ export async function countPublished(): Promise<number> {
     `SELECT count(*)::text AS n FROM articles WHERE status = 'published'`
   );
   return Number(row?.n ?? 0);
+}
+
+/** Las mas leidas de los ultimos dias, para el hero. */
+export async function getMostRead(limit = 5, days = 7): Promise<Article[]> {
+  return query<Article>(
+    `SELECT ${COLUMNS} FROM articles
+      WHERE status = 'published'
+        AND published_at > now() - ($2 || ' days')::interval
+      ORDER BY views DESC, published_at DESC
+      LIMIT $1`,
+    [limit, String(days)]
+  );
+}
+
+/** Ultimas en entrar o en editarse, para la columna de actualidad. */
+export async function getRecentlyUpdated(limit = 5): Promise<Article[]> {
+  return query<Article>(
+    `SELECT ${COLUMNS} FROM articles
+      WHERE status = 'published'
+      ORDER BY GREATEST(published_at, updated_at) DESC
+      LIMIT $1`,
+    [limit]
+  );
+}
+
+export async function registerView(slug: string): Promise<void> {
+  await query(
+    `UPDATE articles SET views = views + 1 WHERE slug = $1 AND status = 'published'`,
+    [slug]
+  );
 }
 
 export async function getBySlug(slug: string): Promise<Article | null> {
