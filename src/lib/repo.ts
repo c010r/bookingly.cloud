@@ -63,16 +63,6 @@ export async function getById(id: number): Promise<Article | null> {
   return queryOne<Article>(`SELECT ${COLUMNS} FROM articles WHERE id = $1`, [id]);
 }
 
-export async function getByTag(tag: string, limit = 30): Promise<Article[]> {
-  return query<Article>(
-    `SELECT ${COLUMNS} FROM articles
-      WHERE status = 'published' AND $1 = ANY(tags)
-      ORDER BY published_at DESC
-      LIMIT $2`,
-    [tag, limit]
-  );
-}
-
 export async function getByCategory(category: string, limit = 40): Promise<Article[]> {
   return query<Article>(
     `SELECT ${COLUMNS} FROM articles
@@ -101,16 +91,6 @@ export async function getRelated(article: Article, limit = 3): Promise<Article[]
       LIMIT $4`,
     [article.id, article.tags, article.category, limit]
   );
-}
-
-export async function getTopTags(limit = 12): Promise<{ tag: string; n: number }[]> {
-  const rows = await query<{ tag: string; n: string }>(
-    `SELECT unnest(tags) AS tag, count(*)::text AS n
-       FROM articles WHERE status = 'published'
-      GROUP BY tag ORDER BY count(*) DESC, tag ASC LIMIT $1`,
-    [limit]
-  );
-  return rows.map((r) => ({ tag: r.tag, n: Number(r.n) }));
 }
 
 /* ---------- Panel ---------- */

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import ArticleCard from "@/components/ArticleCard";
-import { countPublished, getPublished, getTopTags } from "@/lib/repo";
+import { countPublished, getPublished } from "@/lib/repo";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -16,10 +16,9 @@ export default async function Home({
   const page = Math.max(1, Number(p) || 1);
   const offset = (page - 1) * PAGE_SIZE;
 
-  const [articles, total, tags] = await Promise.all([
+  const [articles, total] = await Promise.all([
     getPublished(PAGE_SIZE, offset),
     countPublished(),
-    getTopTags(10),
   ]);
 
   if (articles.length === 0) {
@@ -42,19 +41,6 @@ export default async function Home({
 
   return (
     <>
-      {tags.length > 0 && (
-        <>
-          <div className="section-title">Temas</div>
-          <div className="tags">
-            {tags.map((t) => (
-              <Link key={t.tag} href={`/tema/${encodeURIComponent(t.tag)}`} className="tag">
-                {t.tag} <span style={{ opacity: 0.5 }}>{t.n}</span>
-              </Link>
-            ))}
-          </div>
-        </>
-      )}
-
       <div className="section-title">{page === 1 ? "Ultimo" : `Pagina ${page}`}</div>
       <div className="grid">
         {page === 1 && <ArticleCard article={lead} featured />}

@@ -68,16 +68,6 @@ export default async function ArticlePage({ params }: Params) {
       <h1>{article.title}</h1>
       {article.dek && <p className="dek">{article.dek}</p>}
 
-      {article.tags.length > 0 && (
-        <div className="tags">
-          {article.tags.map((t) => (
-            <Link key={t} href={`/tema/${encodeURIComponent(t)}`} className="tag">
-              {t}
-            </Link>
-          ))}
-        </div>
-      )}
-
       {article.image_url && (
         // eslint-disable-next-line @next/next/no-img-element
         <img className="hero-img" src={article.image_url} alt="" />

@@ -50,7 +50,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </Link>
             <nav className="nav">
               <Link href="/">Portada</Link>
-              <Link href="/temas">Temas</Link>
               <ThemeToggle />
             </nav>
           </div>
