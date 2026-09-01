@@ -58,6 +58,19 @@ const EN_NICHE: Feed[] = [
   { name: "Polygon", feed: "https://www.polygon.com/rss/index.xml", site: "https://www.polygon.com", lang: "en" },
 ];
 
+/** IA: el tema con mas volumen de noticias, con seccion propia en el sitio. */
+const IA: Feed[] = [
+  { name: "TechCrunch · IA", feed: "https://techcrunch.com/category/artificial-intelligence/feed/", site: "https://techcrunch.com/category/artificial-intelligence/", lang: "en" },
+  { name: "The Verge · IA", feed: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", site: "https://www.theverge.com/ai-artificial-intelligence", lang: "en" },
+  { name: "VentureBeat · IA", feed: "https://venturebeat.com/category/ai/feed/", site: "https://venturebeat.com/category/ai/", lang: "en" },
+  { name: "MIT Tech Review · IA", feed: "https://www.technologyreview.com/topic/artificial-intelligence/feed", site: "https://www.technologyreview.com/topic/artificial-intelligence/", lang: "en" },
+  { name: "The Decoder", feed: "https://the-decoder.com/feed/", site: "https://the-decoder.com", lang: "en" },
+  { name: "MarkTechPost", feed: "https://www.marktechpost.com/feed/", site: "https://www.marktechpost.com", lang: "en" },
+  { name: "Google · Blog de IA", feed: "https://blog.google/technology/ai/rss/", site: "https://blog.google/technology/ai/", lang: "en" },
+  { name: "NVIDIA Blog", feed: "https://blogs.nvidia.com/feed/", site: "https://blogs.nvidia.com", lang: "en" },
+  { name: "Import AI", feed: "https://importai.substack.com/feed", site: "https://importai.substack.com", lang: "en" },
+];
+
 /** Medios en espanol: aportan contexto local y vocabulario natural. */
 const ES: Feed[] = [
   { name: "Xataka", feed: "https://www.xataka.com/feedburner.xml", site: "https://www.xataka.com", lang: "es" },
@@ -72,7 +85,7 @@ const ES: Feed[] = [
   { name: "Vida Extra", feed: "https://www.vidaextra.com/feedburner.xml", site: "https://www.vidaextra.com", lang: "es" },
 ];
 
-const ALL = [...EN_GENERAL, ...EN_COMMUNITY, ...EN_NICHE, ...ES];
+const ALL = [...EN_GENERAL, ...EN_COMMUNITY, ...EN_NICHE, ...IA, ...ES];
 const check = process.argv.includes("--check");
 
 for (const f of ALL) {
