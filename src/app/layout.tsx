@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import SiteNav from "@/components/SiteNav";
 import ThemeToggle from "@/components/ThemeToggle";
+import LastUpdate from "@/components/LastUpdate";
 import { env } from "@/lib/env";
 import "./globals.css";
 
@@ -67,10 +68,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <span>
                 © {new Date().getFullYear()} {env.siteName}
               </span>
-              <span className="inline-flex items-center gap-2">
-                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-neon" />
-                actualizado cada 30 min
-              </span>
+              <Suspense fallback={null}>
+                <LastUpdate />
+              </Suspense>
             </div>
           </footer>
         </div>

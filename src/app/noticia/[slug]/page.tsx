@@ -91,7 +91,18 @@ export default async function ArticlePage({ params }: Params) {
       <div className="prose-news mt-8" dangerouslySetInnerHTML={{ __html: html }} />
 
       <aside className="mt-12 rounded-xl border border-line border-l-2 border-l-neon bg-surface p-5 text-[13.5px] leading-relaxed text-fg-muted">
-        Basado en la informacion publicada por <strong className="text-fg">{article.source_name}</strong>:{" "}
+        {article.source_author ? (
+          <>
+            Basado en el articulo de{" "}
+            <strong className="text-fg">{article.source_author}</strong> en{" "}
+            <strong className="text-fg">{article.source_name}</strong>:{" "}
+          </>
+        ) : (
+          <>
+            Basado en la informacion publicada por{" "}
+            <strong className="text-fg">{article.source_name}</strong>:{" "}
+          </>
+        )}
         <a
           href={article.source_url}
           target="_blank"

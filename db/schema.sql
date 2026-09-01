@@ -76,3 +76,6 @@ CREATE INDEX IF NOT EXISTS articles_views_idx
 
 -- Tipo de fuente: casi todas son RSS, pero algunas (GitHub) se consultan por API.
 ALTER TABLE sources ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'rss';
+
+-- Firma del articulo original, para atribuir a quien lo escribio.
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS source_author TEXT;

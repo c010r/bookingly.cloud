@@ -8,6 +8,7 @@ export type Article = {
   source_name: string;
   source_url: string;
   source_title: string;
+  source_author: string | null;
   source_published_at: Date | null;
   status: "draft" | "published" | "rejected";
   title: string;
@@ -31,7 +32,7 @@ export type Article = {
   published_at: Date | null;
 };
 
-const COLUMNS = `id, source_id, source_name, source_url, source_title, source_published_at,
+const COLUMNS = `id, source_id, source_name, source_url, source_title, source_author, source_published_at,
   status, title, slug, dek, body_md, tags, category, extra_sources, quality_score,
   quality_notes, auto_published, seo_title, seo_description, image_url,
   reading_minutes, views, model, created_at, updated_at, published_at`;
@@ -74,6 +75,14 @@ export async function getRecentlyUpdated(limit = 5): Promise<Article[]> {
       LIMIT $1`,
     [limit]
   );
+}
+
+/** Momento de la ultima publicacion, para el sello de actualizacion. */
+export async function getLastUpdate(): Promise<Date | null> {
+  const row = await queryOne<{ ultima: Date | null }>(
+    `SELECT max(published_at) AS ultima FROM articles WHERE status = 'published'`
+  );
+  return row?.ultima ?? null;
 }
 
 export async function registerView(slug: string): Promise<void> {

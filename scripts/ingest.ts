@@ -26,6 +26,7 @@ console.log(`Creadas:      ${report.created}`);
 console.log(`Publicadas:   ${report.published}`);
 console.log(`Repetidas:    ${report.duplicates}   (misma noticia en otro medio)`);
 console.log(`Ya conocidas: ${report.skipped}   (misma URL, o sin texto suficiente)`);
+console.log(`Caducadas:    ${report.stale}   (mas viejas que la ventana de frescura)`);
 console.log(`Fallos:       ${report.failed}`);
 if (report.errors.length) {
   console.log("\nErrores:");

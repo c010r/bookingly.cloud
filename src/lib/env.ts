@@ -55,6 +55,10 @@ export const env = {
         (process.env.PRODUCTHUNT_CLIENT_ID && process.env.PRODUCTHUNT_CLIENT_SECRET)
     );
   },
+  /** Antiguedad maxima de una noticia para entrar. Mas vieja, se ignora. */
+  get maxAgeHours() {
+    return Number(process.env.INGEST_MAX_AGE_HOURS || 24);
+  },
   /** Tope por fuente y tanda. Sin el, un solo medio copa la portada. */
   get maxPerSource() {
     const v = process.env.INGEST_MAX_PER_SOURCE;

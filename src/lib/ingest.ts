@@ -26,6 +26,8 @@ export type FeedItem = {
   summary: string;
   publishedAt: Date | null;
   image: string | null;
+  /** Quien firma el original, si el feed lo dice. */
+  author: string | null;
   /** Si viene ya resuelto, no hace falta descargar y extraer la pagina. */
   content?: string;
 };
@@ -68,7 +70,10 @@ async function githubItems(): Promise<FeedItem[]> {
       title: `${repo.fullName}: ${repo.stars.toLocaleString("es-ES")} estrellas en GitHub`,
       link: repo.url,
       summary: repo.description,
-      publishedAt: repo.createdAt,
+      // Lo noticiable es que esta despegando ahora, no cuando se creo el
+      // repositorio: esa fecha ya va dentro del texto.
+      publishedAt: new Date(),
+      author: repo.owner,
       image: `https://opengraph.githubassets.com/1/${repo.fullName}`,
       content: repoContent(repo, texto),
     });
@@ -106,6 +111,7 @@ async function productHuntItems(): Promise<FeedItem[]> {
       title: `Lanzamientos del dia en Product Hunt: ${nombres} y mas`,
       summary: `Los ${productos.length} productos mas votados del dia.`,
       publishedAt: hoy,
+      author: null,
       image: null,
       content: digestContent(productos),
     },
@@ -125,6 +131,7 @@ export async function fetchFeed(source: Source): Promise<FeedItem[]> {
         link,
         summary: stripHtml(item.contentSnippet || item.content || ""),
         publishedAt: date && !Number.isNaN(date.getTime()) ? date : null,
+        author: pickAuthor(item as unknown as Record<string, unknown>),
         image: pickImage(item as unknown as Record<string, unknown>),
       } satisfies FeedItem;
     })
@@ -159,6 +166,8 @@ export type IngestOptions = {
   autoPublish?: boolean;
   /** Articulos nuevos como maximo por fuente y tanda. */
   maxPerSource?: number;
+  /** Antiguedad maxima admitida, en horas. */
+  maxAgeHours?: number;
   onProgress?: (msg: string) => void;
 };
 
@@ -168,6 +177,8 @@ export type IngestReport = {
   published: number;
   duplicates: number;
   skipped: number;
+  /** Descartadas por ser mas viejas que la ventana de frescura. */
+  stale: number;
   failed: number;
   errors: string[];
 };
@@ -180,12 +191,15 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
   const autoPublish = opts.autoPublish ?? env.autoPublish;
   const minScore = env.autoPublishMinScore;
   const log = opts.onProgress ?? (() => {});
+  const horasMax = opts.maxAgeHours ?? env.maxAgeHours;
+  const limiteFrescura = Date.now() - horasMax * 3_600_000;
   const report: IngestReport = {
     seen: 0,
     created: 0,
     published: 0,
     duplicates: 0,
     skipped: 0,
+    stale: 0,
     failed: 0,
     errors: [],
   };
@@ -216,6 +230,13 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
       if (report.created >= max) break outer;
       if (fromThisSource >= perSource) break; // cupo lleno: pasamos de fuente
       report.seen++;
+
+      // Solo noticias frescas: un feed puede arrastrar entradas de hace
+      // semanas y no queremos publicarlas como novedad.
+      if (item.publishedAt && item.publishedAt.getTime() < limiteFrescura) {
+        report.stale++;
+        continue;
+      }
 
       // Nivel 1 de deduplicacion: exactamente la misma URL.
       const fp = fingerprint(item.link);
@@ -289,18 +310,19 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
 
         await query(
           `INSERT INTO articles
-             (source_id, source_name, source_url, source_title, source_published_at,
+             (source_id, source_name, source_url, source_title, source_author, source_published_at,
               fingerprint, title_key, status, published_at, auto_published,
               title, slug, dek, body_md, tags, category,
               seo_title, seo_description, image_url, reading_minutes, model,
               quality_score, quality_notes)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
            ON CONFLICT (fingerprint) DO NOTHING`,
           [
             source.id,
             source.name,
             item.link,
             item.title,
+            item.author ?? null,
             item.publishedAt,
             fp,
             titleKey(item.title),
@@ -363,7 +385,10 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
         report.failed,
         report.duplicates,
         report.published,
-        report.errors.join("\n").slice(0, 4000),
+        [report.stale ? `Descartadas por antiguedad: ${report.stale}` : "", ...report.errors]
+          .filter(Boolean)
+          .join("\n")
+          .slice(0, 4000),
       ]
     );
   }
@@ -394,6 +419,28 @@ function stripHtml(html: string): string {
     .replace(/&gt;/g, ">")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/** dc:creator es lo habitual; algunos feeds usan author o un objeto anidado. */
+function pickAuthor(item: Record<string, unknown>): string | null {
+  const bruto =
+    item.creator ??
+    item["dc:creator"] ??
+    item.author ??
+    (item.author as { name?: string } | undefined)?.name;
+
+  if (typeof bruto !== "string") return null;
+
+  const limpio = bruto
+    .replace(/<[^>]+>/g, " ")
+    // Muchos feeds firman "correo@dominio (Nombre Apellido)".
+    .replace(/^\S+@\S+\s*\((.+)\)$/, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Firmas genericas que no aportan nada al lector.
+  if (!limpio || /^(admin|editor|staff|redaccion|news ?desk)$/i.test(limpio)) return null;
+  return limpio.slice(0, 120);
 }
 
 function pickImage(item: Record<string, unknown>): string | null {

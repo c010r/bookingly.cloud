@@ -80,6 +80,15 @@ const DESCUBRIMIENTO: Feed[] = [
   // No es un feed: se consulta la API de busqueda de GitHub. La URL queda
   // como identificador, porque feed_url es la clave unica de la tabla.
   { name: "GitHub en alza", feed: "https://github.com/trending", site: "https://github.com", lang: "en", kind: "github" },
+
+  // Alternativas comprobadas a Product Hunt. Se filtran por puntos o por
+  // popularidad porque sin filtro el texto de cada entrada es demasiado
+  // pobre para escribir nada: lo que sobra son lanzamientos, lo que falta
+  // es material.
+  { name: "Show HN", feed: "https://hnrss.org/show?points=20", site: "https://news.ycombinator.com/show", lang: "en" },
+  { name: "Launch HN", feed: "https://hnrss.org/newest?q=Launch+HN", site: "https://news.ycombinator.com", lang: "en" },
+  { name: "r/SideProject", feed: "https://www.reddit.com/r/SideProject/top/.rss?t=day", site: "https://www.reddit.com/r/SideProject/", lang: "en" },
+  { name: "AlternativeTo", feed: "https://alternativeto.net/news/feed/", site: "https://alternativeto.net", lang: "en" },
 ];
 
 /** Medios en espanol: aportan contexto local y vocabulario natural. */
