@@ -136,6 +136,9 @@ else
     echo "Clave de DeepSeek actualizada."
   fi
   echo "Se conserva el ${ENV_FILE} existente."
+  # El puerto elegido en la primera instalacion manda sobre el valor por defecto.
+  PORT="$(grep -E '^PORT=' "$ENV_FILE" | cut -d= -f2 || true)"
+  PORT="${PORT:-3000}"
 fi
 chown "$APP_USER:$APP_USER" "$ENV_FILE"
 chmod 600 "$ENV_FILE"
@@ -174,6 +177,14 @@ as_app npm run db:seed
 as_app npm run build
 
 say "Servicio systemd"
+# En un servidor compartido el puerto puede estar ocupado por otra aplicacion.
+if ! systemctl is-active --quiet bookingly.service; then
+  if ss -tln | awk '{print $4}' | grep -qE "[:.]${PORT}$"; then
+    echo "XXX El puerto ${PORT} ya esta en uso por otro proceso."
+    echo "XXX Reejecuta con otro puerto: PORT=3010 bash deploy/bootstrap.sh"
+    exit 1
+  fi
+fi
 install -m 644 "$APP_DIR/deploy/bookingly.service" /etc/systemd/system/bookingly.service
 install -m 644 "$APP_DIR/deploy/bookingly-ingest.service" /etc/systemd/system/bookingly-ingest.service
 install -m 644 "$APP_DIR/deploy/bookingly-ingest.timer" /etc/systemd/system/bookingly-ingest.timer
@@ -194,10 +205,15 @@ nginx -t
 systemctl reload nginx
 
 say "Cortafuegos"
-ufw allow OpenSSH || true
-ufw allow 22/tcp || true
-ufw allow 'Nginx Full' || true
-ufw --force enable || true
+# Este servidor aloja mas servicios (correo, docker, otros sitios). Activar un
+# cortafuegos que no estaba activo podria cortarlos, asi que solo anadimos
+# reglas si el administrador ya lo tenia encendido.
+if ufw status 2>/dev/null | grep -q "Status: active"; then
+  ufw allow OpenSSH || true
+  ufw allow 'Nginx Full' || true
+else
+  echo "ufw inactivo: se deja tal cual."
+fi
 
 say "Certificado TLS"
 if certbot --nginx -d "$DOMAIN" -d "www.${DOMAIN}" \
