@@ -36,9 +36,24 @@ export const env = {
   get githubToken() {
     return process.env.GITHUB_TOKEN || "";
   },
-  /** Token de la API de Product Hunt. Sin el, esa fuente se salta. */
+  /** Developer token de Product Hunt, si se prefiere al par clave/secreto. */
   get productHuntToken() {
     return process.env.PRODUCTHUNT_TOKEN || "";
+  },
+  /** API Key de la aplicacion registrada en Product Hunt. */
+  get productHuntClientId() {
+    return process.env.PRODUCTHUNT_CLIENT_ID || "";
+  },
+  /** API Secret de esa misma aplicacion. */
+  get productHuntClientSecret() {
+    return process.env.PRODUCTHUNT_CLIENT_SECRET || "";
+  },
+  /** Hay forma de autenticarse contra Product Hunt? */
+  get tieneProductHunt() {
+    return Boolean(
+      process.env.PRODUCTHUNT_TOKEN ||
+        (process.env.PRODUCTHUNT_CLIENT_ID && process.env.PRODUCTHUNT_CLIENT_SECRET)
+    );
   },
   /** Tope por fuente y tanda. Sin el, un solo medio copa la portada. */
   get maxPerSource() {

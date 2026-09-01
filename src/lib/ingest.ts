@@ -83,8 +83,11 @@ async function githubItems(): Promise<FeedItem[]> {
 async function productHuntItems(): Promise<FeedItem[]> {
   // Sin token no hay nada que hacer, pero tampoco es un error: la fuente se
   // salta y el resto de la ingesta sigue igual.
-  if (!env.productHuntToken) {
-    console.warn("Product Hunt: falta PRODUCTHUNT_TOKEN, se salta la fuente.");
+  if (!env.tieneProductHunt) {
+    console.warn(
+      "Product Hunt: sin credenciales (PRODUCTHUNT_CLIENT_ID y " +
+        "PRODUCTHUNT_CLIENT_SECRET, o PRODUCTHUNT_TOKEN). Se salta la fuente."
+    );
     return [];
   }
 
