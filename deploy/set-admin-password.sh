@@ -29,6 +29,25 @@ if [ "${1:-}" = "--generar" ]; then
   NUEVA="$(openssl rand -base64 18 | tr -d '/+=' | cut -c1-20)"
   echo "Contrasena generada. Queda en ${CREDS_FILE}."
 else
+  # Sin terminal no se puede pedir nada por teclado. Es el caso al lanzarlo
+  # desde un panel web, un cron o el prefijo '!' de un asistente: mejor
+  # explicarlo que salir en silencio.
+  if [ ! -t 0 ]; then
+    cat >&2 <<'AYUDA'
+No hay terminal interactiva, asi que no puedo pedir la contrasena por teclado.
+
+Tienes dos opciones:
+
+  1. Ejecutalo desde una terminal de verdad (PowerShell, Windows Terminal):
+       ssh -t bookingly 'bash /opt/bookingly.cloud/deploy/set-admin-password.sh'
+
+  2. Que la genere el servidor (no se imprime, queda en el fichero de
+     credenciales, solo legible por root):
+       ssh bookingly 'bash /opt/bookingly.cloud/deploy/set-admin-password.sh --generar'
+AYUDA
+    exit 1
+  fi
+
   # -s: no se muestra al teclearla.
   read -r -s -p "Nueva contrasena del panel: " NUEVA; echo
   read -r -s -p "Repitela: " CONFIRMA; echo
