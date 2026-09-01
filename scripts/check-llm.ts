@@ -29,7 +29,9 @@ try {
       { role: "user", content: "Contesta en espanol e indica en que idioma respondes." },
     ],
     json: true,
-    maxTokens: 100,
+    // Holgado a proposito: un modelo con razonamiento gasta tokens pensando
+    // antes de escribir, y si se queda sin cupo devuelve el contenido vacio.
+    maxTokens: 2000,
   });
   const parsed = parseJsonLoose<{ ok?: boolean; idioma?: string }>(raw);
   console.log(`Respuesta: ${JSON.stringify(parsed)}`);
