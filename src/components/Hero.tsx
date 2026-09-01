@@ -21,12 +21,15 @@ export default function Hero({
   return (
     <section className="relative mt-6 mb-14 overflow-hidden rounded-2xl border border-line bg-surface">
       <div className="grid gap-px bg-line lg:grid-cols-[1.55fr_1fr]">
-        <div className="bg-surface">
+        {/* min-w-0 es imprescindible: la pista del carrusel mide 500% y, como
+            los elementos de una rejilla se dimensionan por su contenido
+            minimo, sin esto la columna se expande y expulsa a la de al lado. */}
+        <div className="min-w-0 overflow-hidden bg-surface">
           <HeroCarousel articulos={destacadas} />
         </div>
 
         {/* --- Columnas de apoyo --- */}
-        <div className="grid gap-px bg-line">
+        <div className="grid min-w-0 gap-px bg-line">
           <Panel titulo="Recien llegadas" acento="neon-2">
             <ol className="divide-y divide-line">
               {recientes.map((a, i) => (
