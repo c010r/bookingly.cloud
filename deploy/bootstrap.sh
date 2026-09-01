@@ -99,7 +99,7 @@ PGSSL=0
 
 LLM_API_KEY=${LLM_API_KEY:-PENDIENTE_PON_TU_CLAVE}
 LLM_BASE_URL=${LLM_BASE_URL:-https://api.groq.com/openai/v1}
-LLM_MODEL=${LLM_MODEL:-llama-3.3-70b-versatile}
+LLM_MODEL=${LLM_MODEL:-openai/gpt-oss-120b}
 
 SITE_NAME=${SITE_NAME:-c010r News}
 SITE_URL=https://${DOMAIN}
@@ -142,7 +142,7 @@ else
 LLM_API_KEY=%s
 LLM_BASE_URL=%s
 LLM_MODEL=%s
-'         "${LLM_API_KEY}"         "${LLM_BASE_URL:-https://api.groq.com/openai/v1}"         "${LLM_MODEL:-llama-3.3-70b-versatile}" >> "$ENV_FILE"
+'         "${LLM_API_KEY}"         "${LLM_BASE_URL:-https://api.groq.com/openai/v1}"         "${LLM_MODEL:-openai/gpt-oss-120b}" >> "$ENV_FILE"
     fi
     echo "Clave del modelo actualizada."
   fi

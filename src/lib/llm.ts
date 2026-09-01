@@ -30,7 +30,7 @@ export async function chat(opts: ChatOptions): Promise<string> {
     model: env.llmModel,
     messages: opts.messages,
     temperature: opts.temperature ?? 0.7,
-    max_tokens: opts.maxTokens ?? 4000,
+    max_tokens: opts.maxTokens ?? 8000,
     stream: false,
     ...(opts.json ? { response_format: { type: "json_object" } } : {}),
   };

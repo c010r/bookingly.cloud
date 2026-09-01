@@ -29,7 +29,7 @@ export const env = {
   },
   get llmModel() {
     if (this.usaConfigAntigua) return process.env.DEEPSEEK_MODEL || "deepseek-chat";
-    return process.env.LLM_MODEL || "llama-3.3-70b-versatile";
+    return process.env.LLM_MODEL || "openai/gpt-oss-120b";
   },
   /** Solo hay claves DEEPSEEK_*: es un .env anterior al cambio de proveedor. */
   get usaConfigAntigua() {
