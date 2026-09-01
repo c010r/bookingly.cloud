@@ -9,7 +9,7 @@ import { addSource } from "../src/lib/repo";
 import { closePool } from "../src/lib/db";
 import { fetchFeed } from "../src/lib/ingest";
 
-type Feed = { name: string; feed: string; site: string; lang: string };
+type Feed = { name: string; feed: string; site: string; lang: string; kind?: string };
 
 /** Medios generalistas de tecnologia en ingles. */
 const EN_GENERAL: Feed[] = [
@@ -19,7 +19,6 @@ const EN_GENERAL: Feed[] = [
   { name: "Engadget", feed: "https://www.engadget.com/rss.xml", site: "https://www.engadget.com", lang: "en" },
   { name: "Wired", feed: "https://www.wired.com/feed/rss", site: "https://www.wired.com", lang: "en" },
   { name: "Gizmodo", feed: "https://gizmodo.com/rss", site: "https://gizmodo.com", lang: "en" },
-  { name: "ZDNET", feed: "https://www.zdnet.com/news/rss.xml", site: "https://www.zdnet.com", lang: "en" },
   { name: "CNET", feed: "https://www.cnet.com/rss/news/", site: "https://www.cnet.com", lang: "en" },
   { name: "TechRadar", feed: "https://www.techradar.com/rss", site: "https://www.techradar.com", lang: "en" },
   { name: "Digital Trends", feed: "https://www.digitaltrends.com/feed/", site: "https://www.digitaltrends.com", lang: "en" },
@@ -46,8 +45,10 @@ const EN_NICHE: Feed[] = [
   { name: "BleepingComputer", feed: "https://www.bleepingcomputer.com/feed/", site: "https://www.bleepingcomputer.com", lang: "en" },
   { name: "Krebs on Security", feed: "https://krebsonsecurity.com/feed/", site: "https://krebsonsecurity.com", lang: "en" },
   { name: "Schneier on Security", feed: "https://www.schneier.com/feed/atom/", site: "https://www.schneier.com", lang: "en" },
-  { name: "AnandTech", feed: "https://www.anandtech.com/rss/", site: "https://www.anandtech.com", lang: "en" },
   { name: "Tom's Hardware", feed: "https://www.tomshardware.com/feeds/all", site: "https://www.tomshardware.com", lang: "en" },
+  { name: "TechSpot", feed: "https://www.techspot.com/backend.xml", site: "https://www.techspot.com", lang: "en" },
+  { name: "HotHardware", feed: "https://hothardware.com/rss/news", site: "https://hothardware.com", lang: "en" },
+  { name: "ServeTheHome", feed: "https://www.servethehome.com/feed/", site: "https://www.servethehome.com", lang: "en" },
   { name: "Phoronix", feed: "https://www.phoronix.com/rss.php", site: "https://www.phoronix.com", lang: "en" },
   { name: "9to5Mac", feed: "https://9to5mac.com/feed/", site: "https://9to5mac.com", lang: "en" },
   { name: "9to5Google", feed: "https://9to5google.com/feed/", site: "https://9to5google.com", lang: "en" },
@@ -71,6 +72,14 @@ const IA: Feed[] = [
   { name: "Import AI", feed: "https://importai.substack.com/feed", site: "https://importai.substack.com", lang: "en" },
 ];
 
+/** Descubrimiento: producto nuevo y proyectos que despegan. */
+const DESCUBRIMIENTO: Feed[] = [
+  { name: "Product Hunt", feed: "https://www.producthunt.com/feed", site: "https://www.producthunt.com", lang: "en" },
+  // No es un feed: se consulta la API de busqueda de GitHub. La URL queda
+  // como identificador, porque feed_url es la clave unica de la tabla.
+  { name: "GitHub en alza", feed: "https://github.com/trending", site: "https://github.com", lang: "en", kind: "github" },
+];
+
 /** Medios en espanol: aportan contexto local y vocabulario natural. */
 const ES: Feed[] = [
   { name: "Xataka", feed: "https://www.xataka.com/feedburner.xml", site: "https://www.xataka.com", lang: "es" },
@@ -78,20 +87,25 @@ const ES: Feed[] = [
   { name: "Xataka Movil", feed: "https://www.xatakamovil.com/feedburner.xml", site: "https://www.xatakamovil.com", lang: "es" },
   { name: "Hipertextual", feed: "https://hipertextual.com/feed", site: "https://hipertextual.com", lang: "es" },
   { name: "Applesfera", feed: "https://www.applesfera.com/feedburner.xml", site: "https://www.applesfera.com", lang: "es" },
-  { name: "Muy Computer", feed: "https://www.muycomputer.com/feed/", site: "https://www.muycomputer.com", lang: "es" },
-  { name: "MuySeguridad", feed: "https://www.muyseguridad.net/feed/", site: "https://www.muyseguridad.net", lang: "es" },
   { name: "El Diario · Tecnologia", feed: "https://www.eldiario.es/rss/tecnologia/", site: "https://www.eldiario.es/tecnologia/", lang: "es" },
   { name: "Xataka Android", feed: "https://www.xatakandroid.com/feedburner.xml", site: "https://www.xatakandroid.com", lang: "es" },
+  { name: "ADSLZone", feed: "https://www.adslzone.net/feed/", site: "https://www.adslzone.net", lang: "es" },
+  { name: "Computer Hoy", feed: "https://computerhoy.20minutos.es/rss", site: "https://computerhoy.20minutos.es", lang: "es" },
+  { name: "Omicrono", feed: "https://www.elespanol.com/rss/omicrono/", site: "https://www.elespanol.com/omicrono/", lang: "es" },
   { name: "Vida Extra", feed: "https://www.vidaextra.com/feedburner.xml", site: "https://www.vidaextra.com", lang: "es" },
 ];
 
-const ALL = [...EN_GENERAL, ...EN_COMMUNITY, ...EN_NICHE, ...IA, ...ES];
+const ALL = [...EN_GENERAL, ...EN_COMMUNITY, ...EN_NICHE, ...IA, ...DESCUBRIMIENTO, ...ES];
 const check = process.argv.includes("--check");
 
 for (const f of ALL) {
-  await addSource(f.name, f.feed, f.site, f.lang);
+  await addSource(f.name, f.feed, f.site, f.lang, f.kind ?? "rss");
   if (!check) {
     console.log(`ok    ${f.name}`);
+    continue;
+  }
+  if (f.kind && f.kind !== "rss") {
+    console.log(`ok    ${f.name.padEnd(26)} (fuente de API, no se comprueba como RSS)`);
     continue;
   }
   try {
@@ -102,6 +116,7 @@ for (const f of ALL) {
       site_url: f.site,
       lang: f.lang,
       active: true,
+      kind: "rss",
     });
     console.log(`ok    ${f.name.padEnd(26)} ${items.length} entradas`);
   } catch (err) {

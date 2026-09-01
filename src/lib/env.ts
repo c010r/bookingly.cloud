@@ -32,6 +32,10 @@ export const env = {
   get maxPerRun() {
     return Number(process.env.INGEST_MAX_PER_RUN || 12);
   },
+  /** Opcional: sube el limite de la API de GitHub de 60 a 5000 peticiones/hora. */
+  get githubToken() {
+    return process.env.GITHUB_TOKEN || "";
+  },
   /** Tope por fuente y tanda. Sin el, un solo medio copa la portada. */
   get maxPerSource() {
     const v = process.env.INGEST_MAX_PER_SOURCE;

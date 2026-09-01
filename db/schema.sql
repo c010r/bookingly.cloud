@@ -73,3 +73,6 @@ ALTER TABLE sources ADD COLUMN IF NOT EXISTS category TEXT;
 ALTER TABLE articles ADD COLUMN IF NOT EXISTS views INTEGER NOT NULL DEFAULT 0;
 CREATE INDEX IF NOT EXISTS articles_views_idx
   ON articles (views DESC) WHERE status = 'published';
+
+-- Tipo de fuente: casi todas son RSS, pero algunas (GitHub) se consultan por API.
+ALTER TABLE sources ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'rss';

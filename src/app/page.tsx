@@ -13,6 +13,8 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const PAGE_SIZE = 12;
+/** Noticias que rotan en el carrusel de portada. */
+const DESTACADAS = 5;
 
 export default async function Home({
   searchParams,
@@ -25,7 +27,7 @@ export default async function Home({
   const offset = (page - 1) * PAGE_SIZE;
 
   const [articles, total, recientes, masLeidas] = await Promise.all([
-    getPublished(PAGE_SIZE, offset),
+    getPublished(primera ? PAGE_SIZE + DESTACADAS : PAGE_SIZE, offset),
     countPublished(),
     primera ? getRecentlyUpdated(5) : Promise.resolve([]),
     primera ? getMostRead(5) : Promise.resolve([]),
@@ -46,16 +48,16 @@ export default async function Home({
     );
   }
 
-  // En la primera pagina la noticia principal se muestra en el hero, asi que
-  // no debe repetirse mas abajo en la rejilla.
-  const [principal, ...resto] = articles;
-  const rejilla = primera ? resto : articles;
+  // En la primera pagina las destacadas van en el carrusel, asi que no deben
+  // repetirse mas abajo en la rejilla.
+  const destacadas = primera ? articles.slice(0, DESTACADAS) : [];
+  const rejilla = primera ? articles.slice(DESTACADAS) : articles;
   const ultimaPagina = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <>
-      {primera && (
-        <Hero principal={principal} recientes={recientes} masLeidas={masLeidas} />
+      {primera && destacadas.length > 0 && (
+        <Hero destacadas={destacadas} recientes={recientes} masLeidas={masLeidas} />
       )}
 
       <SectionTitle>{primera ? "Ultimas noticias" : `Pagina ${page}`}</SectionTitle>

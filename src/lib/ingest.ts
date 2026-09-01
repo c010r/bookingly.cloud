@@ -6,6 +6,7 @@ import { rewriteArticle } from "./rewriter";
 import { DeepSeekError } from "./deepseek";
 import { attachExtraSource, findDuplicate, titleKey } from "./dedupe";
 import { env } from "./env";
+import { readme, repoContent, trendingRepos } from "./collectors/github";
 
 export type Source = {
   id: number;
@@ -14,6 +15,8 @@ export type Source = {
   site_url: string | null;
   lang: string;
   active: boolean;
+  /** "rss" para feeds; "github" se consulta por API. */
+  kind: string;
 };
 
 export type FeedItem = {
@@ -22,12 +25,17 @@ export type FeedItem = {
   summary: string;
   publishedAt: Date | null;
   image: string | null;
+  /** Si viene ya resuelto, no hace falta descargar y extraer la pagina. */
+  content?: string;
 };
 
 const parser = new Parser({
   timeout: 20_000,
   headers: {
-    "user-agent": `${env.siteName}/1.0 (+${env.siteUrl}) feed reader`,
+    // Varios medios (Digital Trends entre ellos) devuelven una pagina de
+    // bloqueo a los user-agent que no parecen un navegador.
+    "user-agent":
+      "Mozilla/5.0 (compatible; c010rNewsBot/1.0; +https://bookingly.cloud)",
     accept: "application/rss+xml, application/atom+xml, application/xml;q=0.9, */*;q=0.8",
   },
   customFields: { item: [["media:content", "mediaContent", { keepArray: false }]] },
@@ -35,11 +43,35 @@ const parser = new Parser({
 
 export async function listSources(onlyActive = true): Promise<Source[]> {
   return query<Source>(
-    `SELECT id, name, feed_url, site_url, lang, active
+    `SELECT id, name, feed_url, site_url, lang, active, kind
        FROM sources
       ${onlyActive ? "WHERE active = TRUE" : ""}
       ORDER BY name ASC`
   );
+}
+
+/** Obtiene las entradas de una fuente, sea del tipo que sea. */
+export async function collectItems(source: Source): Promise<FeedItem[]> {
+  if (source.kind === "github") return githubItems();
+  return fetchFeed(source);
+}
+
+/** Repositorios que estan explotando en estrellas, como si fueran noticias. */
+async function githubItems(): Promise<FeedItem[]> {
+  const repos = await trendingRepos({ limite: 8 });
+  const items: FeedItem[] = [];
+  for (const repo of repos) {
+    const texto = await readme(repo.fullName);
+    items.push({
+      title: `${repo.fullName}: ${repo.stars.toLocaleString("es-ES")} estrellas en GitHub`,
+      link: repo.url,
+      summary: repo.description,
+      publishedAt: repo.createdAt,
+      image: `https://opengraph.githubassets.com/1/${repo.fullName}`,
+      content: repoContent(repo, texto),
+    });
+  }
+  return items;
 }
 
 export async function fetchFeed(source: Source): Promise<FeedItem[]> {
@@ -65,6 +97,9 @@ export async function fetchFeed(source: Source): Promise<FeedItem[]> {
 export async function fetchArticleText(
   item: FeedItem
 ): Promise<{ text: string; image: string | null }> {
+  // Las fuentes de API ya entregan su propio material.
+  if (item.content) return { text: item.content, image: item.image };
+
   try {
     const article = await extract(item.link);
     const text = stripHtml(article?.content || "").trim();
@@ -129,8 +164,8 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
     let fromThisSource = 0;
     let items: FeedItem[] = [];
     try {
-      items = await fetchFeed(source);
-      log(`${source.name}: ${items.length} entradas en el feed`);
+      items = await collectItems(source);
+      log(`${source.name}: ${items.length} entradas`);
     } catch (err) {
       report.failed++;
       const msg = `Feed ${source.name}: ${errMsg(err)}`;

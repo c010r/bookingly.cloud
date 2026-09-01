@@ -19,6 +19,7 @@ const items = await fetchFeed({
   site_url: null,
   lang: "en",
   active: true,
+  kind: "rss",
 });
 
 console.log(`${items.length} entradas encontradas.\n`);

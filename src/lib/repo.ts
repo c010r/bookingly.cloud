@@ -222,13 +222,15 @@ export async function addSource(
   name: string,
   feedUrl: string,
   siteUrl: string,
-  lang: string
+  lang: string,
+  kind = "rss"
 ): Promise<void> {
   await query(
-    `INSERT INTO sources (name, feed_url, site_url, lang)
-     VALUES ($1,$2,$3,$4)
-     ON CONFLICT (feed_url) DO UPDATE SET name = EXCLUDED.name`,
-    [name, feedUrl, siteUrl || null, lang || "en"]
+    `INSERT INTO sources (name, feed_url, site_url, lang, kind)
+     VALUES ($1,$2,$3,$4,$5)
+     ON CONFLICT (feed_url) DO UPDATE
+       SET name = EXCLUDED.name, kind = EXCLUDED.kind`,
+    [name, feedUrl, siteUrl || null, lang || "en", kind]
   );
 }
 

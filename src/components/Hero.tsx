@@ -1,19 +1,18 @@
 import Link from "next/link";
 import type { Article } from "@/lib/repo";
-import { excerpt } from "@/lib/markdown";
-import { categoryName } from "@/lib/categories";
-import { formatDate, formatRelative } from "@/lib/format";
+import HeroCarousel from "./HeroCarousel";
+import { formatRelative } from "@/lib/format";
 
 /**
  * Portada: la noticia principal a la izquierda y, a la derecha, dos columnas
  * de apoyo — lo ultimo en entrar y lo mas leido de la semana.
  */
 export default function Hero({
-  principal,
+  destacadas,
   recientes,
   masLeidas,
 }: {
-  principal: Article;
+  destacadas: Article[];
   recientes: Article[];
   masLeidas: Article[];
 }) {
@@ -21,49 +20,10 @@ export default function Hero({
 
   return (
     <section className="relative mt-6 mb-14 overflow-hidden rounded-2xl border border-line bg-surface">
-      <div className="scanline" aria-hidden="true" />
-
       <div className="grid gap-px bg-line lg:grid-cols-[1.55fr_1fr]">
-        {/* --- Principal --- */}
-        <article className="group relative bg-surface p-6 sm:p-8 lg:p-10">
-          <Link href={`/noticia/${principal.slug}`} className="block">
-            {principal.image_url && (
-              <div className="mb-6 overflow-hidden rounded-xl border border-line">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={principal.image_url}
-                  alt=""
-                  className="aspect-[16/9] w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-                />
-              </div>
-            )}
-
-            <div className="mb-3 flex flex-wrap items-center gap-3 font-mono text-[11px] uppercase tracking-[0.14em]">
-              <span className="inline-flex items-center gap-1.5 text-neon">
-                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-neon" />
-                En portada
-              </span>
-              <span className="text-fg-faint">/</span>
-              <span className="text-fg-faint">{categoryName(principal.category)}</span>
-            </div>
-
-            <h1 className="text-3xl leading-[1.12] font-bold tracking-tight text-balance transition-colors group-hover:text-neon sm:text-4xl lg:text-[2.6rem]">
-              {principal.title}
-            </h1>
-
-            <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-fg-muted sm:text-base">
-              {principal.dek || excerpt(principal.body_md, 220)}
-            </p>
-
-            <div className="mt-6 flex flex-wrap items-center gap-2.5 font-mono text-[11.5px] text-fg-faint">
-              <time>{formatDate(principal.published_at)}</time>
-              <span className="opacity-40">·</span>
-              <span>{principal.reading_minutes} min</span>
-              <span className="opacity-40">·</span>
-              <span>{principal.source_name}</span>
-            </div>
-          </Link>
-        </article>
+        <div className="bg-surface">
+          <HeroCarousel articulos={destacadas} />
+        </div>
 
         {/* --- Columnas de apoyo --- */}
         <div className="grid gap-px bg-line">
