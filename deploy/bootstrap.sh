@@ -74,17 +74,21 @@ fi
 
 say "Fichero .env"
 ENV_FILE="$APP_DIR/.env"
+CREDS_FILE="/root/bookingly-credenciales.txt"
 if [ ! -f "$ENV_FILE" ]; then
-  ADMIN_PASS="$(openssl rand -base64 18 | tr -d '/+=' | cut -c1-20)"
+  # Si GitHub Actions nos pasa una contrasena de panel, la respetamos; si no,
+  # la generamos. Nunca se imprime: va a un fichero solo legible por root, para
+  # que no acabe en los logs publicos del workflow.
+  ADMIN_PASS="${ADMIN_PASSWORD:-$(openssl rand -base64 18 | tr -d '/+=' | cut -c1-20)}"
   cat > "$ENV_FILE" <<ENV
 DATABASE_URL=postgres://${DB_USER}:${DB_PASS}@127.0.0.1:5432/${DB_NAME}
 PGSSL=0
 
-DEEPSEEK_API_KEY=PENDIENTE_PON_TU_CLAVE
+DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-PENDIENTE_PON_TU_CLAVE}
 DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_MODEL=deepseek-chat
+DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-chat}
 
-SITE_NAME=c010r News
+SITE_NAME=${SITE_NAME:-c010r News}
 SITE_URL=https://${DOMAIN}
 SITE_DESCRIPTION=Noticias de tecnologia, reescritas con criterio.
 
@@ -99,10 +103,27 @@ AUTO_PUBLISH_MIN_SCORE=78
 PORT=${PORT}
 NODE_ENV=production
 ENV
-  echo "Generado ${ENV_FILE}. Contrasena del panel: ${ADMIN_PASS}"
+  cat > "$CREDS_FILE" <<CREDS
+Credenciales de ${DOMAIN} — generadas el $(date -Is)
+
+  Panel:              https://${DOMAIN}/admin
+  ADMIN_PASSWORD:     ${ADMIN_PASS}
+  Base de datos:      ${DB_NAME} / usuario ${DB_USER}
+
+La configuracion completa esta en ${ENV_FILE} (solo root).
+Borra este fichero cuando hayas guardado la contrasena en tu gestor.
+CREDS
+  chmod 600 "$CREDS_FILE"
+  echo "Generado ${ENV_FILE}."
+  echo "La contrasena del panel esta en ${CREDS_FILE} (no se imprime aqui para que no acabe en los logs)."
 else
   # Refrescamos solo la cadena de conexion, respetando el resto de la configuracion.
   sed -i "s|^DATABASE_URL=.*|DATABASE_URL=postgres://${DB_USER}:${DB_PASS}@127.0.0.1:5432/${DB_NAME}|" "$ENV_FILE"
+  # Si el workflow trae una clave de DeepSeek nueva, la actualizamos.
+  if [ -n "${DEEPSEEK_API_KEY:-}" ]; then
+    sed -i "s|^DEEPSEEK_API_KEY=.*|DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}|" "$ENV_FILE"
+    echo "Clave de DeepSeek actualizada."
+  fi
   echo "Se conserva el ${ENV_FILE} existente."
 fi
 chown "$APP_USER:$APP_USER" "$ENV_FILE"
@@ -149,15 +170,22 @@ fi
 
 say "Listo"
 systemctl --no-pager status bookingly.service | head -12
-cat <<FIN
 
-  Sitio:  https://${DOMAIN}
-  Panel:  https://${DOMAIN}/admin
+echo
+echo "  Sitio:  https://${DOMAIN}"
+echo "  Panel:  https://${DOMAIN}/admin"
+echo "  Credenciales: ${CREDS_FILE}"
+echo
 
-  PENDIENTE: edita ${ENV_FILE} y pon tu DEEPSEEK_API_KEY real,
-  despues:   systemctl restart bookingly
+if grep -q '^DEEPSEEK_API_KEY=PENDIENTE' "$ENV_FILE"; then
+  echo "  PENDIENTE: no hay clave de DeepSeek. Sin ella no se reescribe nada."
+  echo "  Define el secreto DEEPSEEK_API_KEY en GitHub y relanza el workflow,"
+  echo "  o editala a mano en ${ENV_FILE} y ejecuta: systemctl restart bookingly"
+else
+  echo "  Clave de DeepSeek configurada."
+fi
 
-  Primera ingesta manual:
-    sudo -u ${APP_USER} bash -c 'cd ${APP_DIR} && npm run ingest -- --max=3'
-
-FIN
+echo
+echo "  Primera ingesta de prueba:"
+echo "    sudo -u ${APP_USER} bash -c 'cd ${APP_DIR} && npm run ingest -- --max=3'"
+echo

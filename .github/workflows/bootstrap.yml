@@ -1,0 +1,118 @@
+name: Preparar el servidor (una sola vez)
+
+# Instalacion inicial completa de 72.60.2.48. Es manual a proposito: reconfigura
+# Nginx, systemd y la base de datos, asi que no debe dispararse con un push.
+#
+# Requiere estos secretos del repositorio:
+#   SSH_HOST          72.60.2.48
+#   SSH_USER          root
+#   SSH_PASSWORD      contrasena de root   (o bien SSH_KEY, ver abajo)
+#   SSH_KEY           clave privada SSH    (preferible; si existe, se usa esta)
+#   DEEPSEEK_API_KEY  clave de la API de DeepSeek
+#   ADMIN_PASSWORD    (opcional) contrasena del panel; si falta, se genera
+
+on:
+  workflow_dispatch:
+    inputs:
+      dominio:
+        description: "Dominio del sitio"
+        required: true
+        default: "bookingly.cloud"
+      confirmar:
+        description: 'Escribe SI para confirmar la instalacion en el servidor'
+        required: true
+        default: "no"
+
+concurrency:
+  group: servidor-produccion
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    name: Instalar en el servidor
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Comprobar la confirmacion
+        if: inputs.confirmar != 'SI'
+        run: |
+          echo "::error::Debes escribir SI en el campo 'confirmar' para ejecutar la instalacion."
+          exit 1
+
+      - name: Comprobar que hay credenciales SSH
+        env:
+          KEY: ${{ secrets.SSH_KEY }}
+          PASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          if [ -z "$KEY" ] && [ -z "$PASS" ]; then
+            echo "::error::Define el secreto SSH_KEY o SSH_PASSWORD en el repositorio."
+            exit 1
+          fi
+
+      - name: Avisar si falta la clave de DeepSeek
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: |
+          if [ -z "$DEEPSEEK_API_KEY" ]; then
+            echo "::warning::Sin DEEPSEEK_API_KEY el sitio se instala pero no podra reescribir noticias."
+          fi
+
+      - name: Ejecutar bootstrap.sh por SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          command_timeout: 30m
+          envs: DOMAIN,REPO,DEEPSEEK_API_KEY,ADMIN_PASSWORD,SITE_NAME
+          script: |
+            set -euo pipefail
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update -y
+            apt-get install -y git
+            if [ -d /opt/bookingly.cloud/.git ]; then
+              git -C /opt/bookingly.cloud fetch --all --prune
+              git -C /opt/bookingly.cloud reset --hard origin/main
+            else
+              git clone --branch main "$REPO" /opt/bookingly.cloud
+            fi
+            bash /opt/bookingly.cloud/deploy/bootstrap.sh
+        env:
+          DOMAIN: ${{ inputs.dominio }}
+          REPO: https://github.com/${{ github.repository }}.git
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          SITE_NAME: c010r News
+
+      - name: Comprobar que el sitio responde
+        run: |
+          echo "Esperando a que https://${{ inputs.dominio }} responda..."
+          for i in $(seq 1 12); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "https://${{ inputs.dominio }}/" || echo 000)
+            echo "  intento $i: HTTP $code"
+            if [ "$code" = "200" ]; then
+              echo "::notice::El sitio responde en https://${{ inputs.dominio }}"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::El sitio no responde. Revisa los logs: journalctl -u bookingly -n 80"
+          exit 1
+
+      - name: Resumen
+        if: success()
+        run: |
+          {
+            echo "### Servidor preparado"
+            echo ""
+            echo "- Sitio: https://${{ inputs.dominio }}"
+            echo "- Panel: https://${{ inputs.dominio }}/admin"
+            echo ""
+            echo "La contrasena del panel esta en el servidor, en"
+            echo "\`/root/bookingly-credenciales.txt\` (no se imprime en estos logs)."
+            echo ""
+            echo "A partir de ahora, cada push a \`main\` despliega solo."
+          } >> "$GITHUB_STEP_SUMMARY"
