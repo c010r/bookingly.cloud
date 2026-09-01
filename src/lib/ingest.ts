@@ -84,6 +84,8 @@ export type IngestOptions = {
   dryRun?: boolean;
   /** Fuerza el modo de publicacion, ignorando la configuracion del entorno. */
   autoPublish?: boolean;
+  /** Articulos nuevos como maximo por fuente y tanda. */
+  maxPerSource?: number;
   onProgress?: (msg: string) => void;
 };
 
@@ -99,6 +101,9 @@ export type IngestReport = {
 
 export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport> {
   const max = opts.maxPerRun ?? env.maxPerRun;
+  // Sin cupo por fuente, la primera del listado llena ella sola toda la tanda
+  // y el resto no llega a mirarse nunca: la portada acaba siendo un solo medio.
+  const perSource = opts.maxPerSource ?? env.maxPerSource ?? Math.max(2, Math.ceil(max / 4));
   const autoPublish = opts.autoPublish ?? env.autoPublish;
   const minScore = env.autoPublishMinScore;
   const log = opts.onProgress ?? (() => {});
@@ -116,8 +121,12 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
 
   let sources = await listSources();
   if (opts.sourceId) sources = sources.filter((s) => s.id === opts.sourceId);
+  // Y en orden aleatorio, para que no sean siempre las mismas las que se
+  // quedan sin cupo cuando la tanda se llena antes de recorrerlas todas.
+  else sources = shuffle(sources);
 
   outer: for (const source of sources) {
+    let fromThisSource = 0;
     let items: FeedItem[] = [];
     try {
       items = await fetchFeed(source);
@@ -132,6 +141,7 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
 
     for (const item of items) {
       if (report.created >= max) break outer;
+      if (fromThisSource >= perSource) break; // cupo lleno: pasamos de fuente
       report.seen++;
 
       // Nivel 1 de deduplicacion: exactamente la misma URL.
@@ -163,6 +173,7 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
       if (opts.dryRun) {
         log(`[dry-run] Se reescribiria: ${item.title}`);
         report.created++;
+        fromThisSource++;
         continue;
       }
 
@@ -240,6 +251,7 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
         );
 
         report.created++;
+        fromThisSource++;
         if (publish) report.published++;
         log(
           `${publish ? "PUBLICADO" : "borrador"} [${rewritten.category}] ${rewritten.qualityScore}/100 — ${rewritten.title}`
@@ -329,6 +341,16 @@ function pickImage(item: Record<string, unknown>): string | null {
 /** 401/403 de DeepSeek: clave invalida, revocada o cuenta sin saldo. */
 function isAuthError(err: unknown): boolean {
   return err instanceof DeepSeekError && (err.status === 401 || err.status === 403);
+}
+
+/** Fisher-Yates. */
+function shuffle<T>(list: T[]): T[] {
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
 }
 
 function errMsg(err: unknown): string {

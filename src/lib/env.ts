@@ -32,6 +32,11 @@ export const env = {
   get maxPerRun() {
     return Number(process.env.INGEST_MAX_PER_RUN || 12);
   },
+  /** Tope por fuente y tanda. Sin el, un solo medio copa la portada. */
+  get maxPerSource() {
+    const v = process.env.INGEST_MAX_PER_SOURCE;
+    return v ? Number(v) : undefined;
+  },
   /** El sistema publica solo; los borradores quedan para revision humana. */
   get autoPublish() {
     return (process.env.AUTO_PUBLISH ?? "1") !== "0";
