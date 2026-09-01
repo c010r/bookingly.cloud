@@ -8,7 +8,9 @@ User=bookingly
 Group=bookingly
 WorkingDirectory=/opt/bookingly.cloud
 EnvironmentFile=/opt/bookingly.cloud/.env
-ExecStart=/usr/bin/npm run ingest
+# tsx directamente con node: npm necesita escribir en $HOME y aqui no hay.
+Environment=HOME=/opt/bookingly.cloud
+ExecStart=/usr/bin/node node_modules/tsx/dist/cli.mjs scripts/ingest.ts
 TimeoutStartSec=1800
 StandardOutput=journal
 StandardError=journal

@@ -9,17 +9,25 @@ User=bookingly
 Group=bookingly
 WorkingDirectory=/opt/bookingly.cloud
 EnvironmentFile=/opt/bookingly.cloud/.env
-ExecStart=/usr/bin/npm run start
+
+# Arrancamos Next directamente en vez de via npm: npm quiere escribir cache y
+# logs en $HOME, y bajo ProtectHome eso falla. Un proceso menos, ademas.
+Environment=HOME=/opt/bookingly.cloud
+ExecStart=/usr/bin/node node_modules/next/dist/bin/next start
+
 Restart=always
 RestartSec=5
 KillSignal=SIGINT
+TimeoutStopSec=20
 
-# Endurecimiento basico
+# Endurecimiento. ProtectHome se queda en 'read-only' y no en true porque el
+# directorio de trabajo del servicio no esta en /home, pero algun paquete
+# puede querer leer de ahi.
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
-ProtectHome=true
-ReadWritePaths=/opt/bookingly.cloud/.next
+ProtectHome=read-only
+ReadWritePaths=/opt/bookingly.cloud
 ProtectKernelTunables=true
 ProtectControlGroups=true
 RestrictSUIDSGID=true

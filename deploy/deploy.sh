@@ -3,7 +3,7 @@
 # Actualiza la aplicacion ya instalada. Es lo que ejecuta GitHub Actions en cada
 # push a main, y tambien sirve para desplegar a mano:
 #
-#   ssh root@72.60.2.48 'bash /opt/bookingly.cloud/deploy/deploy.sh'
+#   bash /opt/bookingly.cloud/deploy/deploy.sh
 #
 # Idempotente y con vuelta atras: si la compilacion falla, el servicio sigue
 # corriendo con la version anterior.
@@ -13,8 +13,19 @@ APP_DIR="${APP_DIR:-/opt/bookingly.cloud}"
 APP_USER="${APP_USER:-bookingly}"
 SERVICE="${SERVICE:-bookingly}"
 BRANCH="${BRANCH:-main}"
+PORT="${PORT:-3000}"
 
 say() { printf '\n\033[1;32m==> %s\033[0m\n' "$1"; }
+trap 'st=$?; echo ""; echo "XXX FALLO en la linea ${LINENO}: ${BASH_COMMAND}"; echo "XXX codigo de salida: ${st}"; exit $st' ERR
+
+# npm con 'sudo -u' hereda HOME=/root y falla al escribir su cache; le damos
+# HOME y cache propios, igual que hace bootstrap.sh.
+as_app() {
+  sudo -H -u "$APP_USER" \
+    env HOME="/home/${APP_USER}" \
+        npm_config_cache="${APP_DIR}/.npm-cache" \
+        "$@"
+}
 
 cd "$APP_DIR"
 PREVIOUS="$(git rev-parse HEAD)"
@@ -28,21 +39,21 @@ rollback() {
   say "FALLO: volviendo a ${PREVIOUS}"
   git reset --hard "$PREVIOUS"
   chown -R "$APP_USER:$APP_USER" "$APP_DIR"
-  sudo -u "$APP_USER" npm ci --omit=dev --no-audit --no-fund || true
-  sudo -u "$APP_USER" npm run build || true
+  as_app npm ci --no-audit --no-fund || true
+  as_app npm run build || true
   systemctl restart "$SERVICE"
   exit 1
 }
 trap rollback ERR
 
 say "Dependencias"
-sudo -u "$APP_USER" npm ci --no-audit --no-fund
+as_app npm ci --no-audit --no-fund
 
 say "Migraciones"
-sudo -u "$APP_USER" npm run db:migrate
+as_app npm run db:migrate
 
 say "Compilacion"
-sudo -u "$APP_USER" npm run build
+as_app npm run build
 
 trap - ERR
 
@@ -52,7 +63,7 @@ systemctl restart "$SERVICE"
 # Esperamos a que responda antes de dar el despliegue por bueno.
 say "Comprobacion de salud"
 for i in $(seq 1 20); do
-  if curl -fsS -o /dev/null "http://127.0.0.1:${PORT:-3000}/"; then
+  if curl -fsS -o /dev/null "http://127.0.0.1:${PORT}/"; then
     echo "La aplicacion responde. Desplegado $(git rev-parse --short HEAD)."
     exit 0
   fi

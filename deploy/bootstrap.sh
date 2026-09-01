@@ -23,6 +23,10 @@ ADMIN_EMAIL="${ADMIN_EMAIL:-admin@${DOMAIN}}"
 
 say() { printf '\n\033[1;32m==> %s\033[0m\n' "$1"; }
 
+# Diagnostico: si algo falla, decimos en que linea y con que comando, para no
+# tener que adivinar leyendo un log de 500 lineas.
+trap 'st=$?; echo ""; echo "XXX FALLO en la linea ${LINENO}: ${BASH_COMMAND}"; echo "XXX codigo de salida: ${st}"; exit $st' ERR
+
 if [ "$(id -u)" -ne 0 ]; then
   echo "Ejecuta este script como root." >&2
   exit 1
@@ -30,14 +34,21 @@ fi
 
 say "Paquetes base"
 export DEBIAN_FRONTEND=noninteractive
-apt-get update -y
-apt-get install -y curl ca-certificates gnupg git ufw nginx postgresql postgresql-contrib \
-  certbot python3-certbot-nginx
+# En un VPS recien arrancado, unattended-upgrades suele tener el lock de apt.
+# DPkg::Lock::Timeout espera hasta 5 min en vez de morir al instante.
+APT="apt-get -o DPkg::Lock::Timeout=300"
+$APT update -y
+# sudo y openssl no vienen en las imagenes minimas de Ubuntu/Debian y este
+# script depende de los dos: sin ellos fallaba sin explicar por que.
+apt-get install -y sudo openssl curl ca-certificates gnupg git ufw nginx \
+  postgresql postgresql-contrib certbot python3-certbot-nginx
+
+echo "Versiones: $(lsb_release -ds 2>/dev/null || cat /etc/os-release | head -1)"
 
 say "Node.js 22"
 if ! command -v node >/dev/null 2>&1 || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt 20 ]; then
   curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-  apt-get install -y nodejs
+  $APT install -y nodejs
 fi
 node -v
 
@@ -132,18 +143,46 @@ chmod 600 "$ENV_FILE"
 say "Dependencias y compilacion"
 chown -R "$APP_USER:$APP_USER" "$APP_DIR"
 cd "$APP_DIR"
-sudo -u "$APP_USER" npm ci
-sudo -u "$APP_USER" npx --yes esbuild --version >/dev/null 2>&1 || true
-sudo -u "$APP_USER" npm run db:migrate
-sudo -u "$APP_USER" npm run db:seed
-sudo -u "$APP_USER" npm run build
+
+# 'sudo -u' conserva HOME=/root, asi que npm intentaba escribir su cache en
+# /root/.npm y moria con EACCES. Forzamos HOME y una cache propia del proyecto.
+as_app() {
+  sudo -H -u "$APP_USER" \
+    env HOME="/home/${APP_USER}" \
+        npm_config_cache="${APP_DIR}/.npm-cache" \
+        "$@"
+}
+install -d -o "$APP_USER" -g "$APP_USER" "${APP_DIR}/.npm-cache" "/home/${APP_USER}"
+chown "$APP_USER:$APP_USER" "/home/${APP_USER}"
+
+as_app npm ci --no-audit --no-fund
+
+# El seeder y la ingesta se ejecutan con tsx, que necesita el binario de
+# esbuild. Si su script de instalacion no llego a correr, lo reconstruimos
+# antes de que falle mas adelante con un error mucho menos claro.
+if ! as_app npx tsx --version >/dev/null 2>&1; then
+  echo "tsx no arranca; reconstruyendo esbuild..."
+  as_app npm rebuild esbuild || true
+  as_app npx tsx --version >/dev/null 2>&1 || {
+    echo "XXX tsx sigue sin funcionar. Revisa la instalacion de esbuild." >&2
+    exit 1
+  }
+fi
+
+as_app npm run db:migrate
+as_app npm run db:seed
+as_app npm run build
 
 say "Servicio systemd"
 install -m 644 "$APP_DIR/deploy/bookingly.service" /etc/systemd/system/bookingly.service
 install -m 644 "$APP_DIR/deploy/bookingly-ingest.service" /etc/systemd/system/bookingly-ingest.service
 install -m 644 "$APP_DIR/deploy/bookingly-ingest.timer" /etc/systemd/system/bookingly-ingest.timer
 systemctl daemon-reload
-systemctl enable --now bookingly.service
+if ! systemctl enable --now bookingly.service; then
+  echo "XXX El servicio no arranca. Ultimas lineas del journal:"
+  journalctl -u bookingly -n 40 --no-pager || true
+  exit 1
+fi
 systemctl enable --now bookingly-ingest.timer
 
 say "Nginx"
@@ -156,6 +195,7 @@ systemctl reload nginx
 
 say "Cortafuegos"
 ufw allow OpenSSH || true
+ufw allow 22/tcp || true
 ufw allow 'Nginx Full' || true
 ufw --force enable || true
 
@@ -169,7 +209,13 @@ else
 fi
 
 say "Listo"
-systemctl --no-pager status bookingly.service | head -12
+if systemctl is-active --quiet bookingly.service; then
+  echo "Servicio bookingly: activo"
+else
+  echo "XXX El servicio bookingly NO esta activo. Journal:"
+  journalctl -u bookingly -n 40 --no-pager || true
+  exit 1
+fi
 
 echo
 echo "  Sitio:  https://${DOMAIN}"
@@ -186,6 +232,6 @@ else
 fi
 
 echo
-echo "  Primera ingesta de prueba:"
-echo "    sudo -u ${APP_USER} bash -c 'cd ${APP_DIR} && npm run ingest -- --max=3'"
+echo "  Primera ingesta de prueba:  systemctl start bookingly-ingest"
+echo "  Seguirla en vivo:           journalctl -u bookingly-ingest -f"
 echo

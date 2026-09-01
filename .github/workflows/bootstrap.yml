@@ -71,8 +71,8 @@ jobs:
           script: |
             set -euo pipefail
             export DEBIAN_FRONTEND=noninteractive
-            apt-get update -y
-            apt-get install -y git
+            apt-get -o DPkg::Lock::Timeout=300 update -y
+            apt-get -o DPkg::Lock::Timeout=300 install -y git
             if [ -d /opt/bookingly.cloud/.git ]; then
               git -C /opt/bookingly.cloud fetch --all --prune
               git -C /opt/bookingly.cloud reset --hard origin/main
