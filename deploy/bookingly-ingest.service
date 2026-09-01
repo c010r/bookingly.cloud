@@ -1,0 +1,15 @@
+[Unit]
+Description=Ingesta de noticias de c010r News
+After=bookingly.service
+
+[Service]
+Type=oneshot
+User=bookingly
+Group=bookingly
+WorkingDirectory=/opt/bookingly.cloud
+EnvironmentFile=/opt/bookingly.cloud/.env
+ExecStart=/usr/bin/npm run ingest
+TimeoutStartSec=1800
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=bookingly-ingest

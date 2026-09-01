@@ -1,0 +1,52 @@
+name: Desplegar en bookingly.cloud
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  verificar:
+    name: Comprobaciones
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Tipos
+        run: npx tsc --noEmit
+
+      - name: Tests de los helpers
+        run: npx tsx scripts/selftest.ts
+
+      - name: Compilacion
+        run: npm run build
+        env:
+          SITE_URL: https://bookingly.cloud
+
+  desplegar:
+    name: Desplegar por SSH
+    needs: verificar
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Ejecutar deploy.sh en el servidor
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          command_timeout: 20m
+          script: bash /opt/bookingly.cloud/deploy/deploy.sh

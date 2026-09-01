@@ -1,0 +1,12 @@
+[Unit]
+Description=Ejecuta la ingesta de noticias cada 2 horas
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=2h
+# Evita que todos los servidores golpeen los feeds a la vez.
+RandomizedDelaySec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

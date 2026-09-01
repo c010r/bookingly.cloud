@@ -1,0 +1,38 @@
+{
+  "name": "c010r-news",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:seed": "tsx scripts/seed-sources.ts",
+    "ingest": "tsx scripts/ingest.ts"
+  },
+  "dependencies": {
+    "@extractus/article-extractor": "^8.0.16",
+    "marked": "^15.0.7",
+    "next": "^15.5.4",
+    "pg": "^8.16.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "rss-parser": "^3.13.0",
+    "sanitize-html": "^2.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/pg": "^8.15.5",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@types/sanitize-html": "^2.16.0",
+    "dotenv": "^17.2.3",
+    "typescript": "^5.9.2",
+    "tsx": "^4.20.6"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}

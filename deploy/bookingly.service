@@ -1,0 +1,32 @@
+[Unit]
+Description=c010r News (bookingly.cloud)
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bookingly
+Group=bookingly
+WorkingDirectory=/opt/bookingly.cloud
+EnvironmentFile=/opt/bookingly.cloud/.env
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+
+# Endurecimiento basico
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/bookingly.cloud/.next
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=bookingly
+
+[Install]
+WantedBy=multi-user.target
