@@ -36,6 +36,10 @@ export const env = {
   get githubToken() {
     return process.env.GITHUB_TOKEN || "";
   },
+  /** Token de la API de Product Hunt. Sin el, esa fuente se salta. */
+  get productHuntToken() {
+    return process.env.PRODUCTHUNT_TOKEN || "";
+  },
   /** Tope por fuente y tanda. Sin el, un solo medio copa la portada. */
   get maxPerSource() {
     const v = process.env.INGEST_MAX_PER_SOURCE;

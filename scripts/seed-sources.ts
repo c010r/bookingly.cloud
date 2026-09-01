@@ -74,7 +74,9 @@ const IA: Feed[] = [
 
 /** Descubrimiento: producto nuevo y proyectos que despegan. */
 const DESCUBRIMIENTO: Feed[] = [
-  { name: "Product Hunt", feed: "https://www.producthunt.com/feed", site: "https://www.producthunt.com", lang: "en" },
+  // Por API: el RSS publico solo trae el nombre del producto, sin descripcion,
+  // y las fichas responden 403. Necesita PRODUCTHUNT_TOKEN en el .env.
+  { name: "Product Hunt", feed: "https://api.producthunt.com/v2/api/graphql", site: "https://www.producthunt.com", lang: "en", kind: "producthunt" },
   // No es un feed: se consulta la API de busqueda de GitHub. La URL queda
   // como identificador, porque feed_url es la clave unica de la tabla.
   { name: "GitHub en alza", feed: "https://github.com/trending", site: "https://github.com", lang: "en", kind: "github" },

@@ -7,6 +7,7 @@ import { DeepSeekError } from "./deepseek";
 import { attachExtraSource, findDuplicate, titleKey } from "./dedupe";
 import { env } from "./env";
 import { readme, repoContent, trendingRepos } from "./collectors/github";
+import { digestContent, lanzamientos } from "./collectors/producthunt";
 
 export type Source = {
   id: number;
@@ -53,6 +54,7 @@ export async function listSources(onlyActive = true): Promise<Source[]> {
 /** Obtiene las entradas de una fuente, sea del tipo que sea. */
 export async function collectItems(source: Source): Promise<FeedItem[]> {
   if (source.kind === "github") return githubItems();
+  if (source.kind === "producthunt") return productHuntItems();
   return fetchFeed(source);
 }
 
@@ -72,6 +74,39 @@ async function githubItems(): Promise<FeedItem[]> {
     });
   }
   return items;
+}
+
+/**
+ * Un unico resumen diario con los lanzamientos destacados. Una pieza por
+ * producto seria imposible: la API da un lema y poco mas de cada uno.
+ */
+async function productHuntItems(): Promise<FeedItem[]> {
+  // Sin token no hay nada que hacer, pero tampoco es un error: la fuente se
+  // salta y el resto de la ingesta sigue igual.
+  if (!env.productHuntToken) {
+    console.warn("Product Hunt: falta PRODUCTHUNT_TOKEN, se salta la fuente.");
+    return [];
+  }
+
+  const productos = await lanzamientos(24);
+  if (productos.length < 3) return [];
+
+  const hoy = new Date();
+  const dia = hoy.toISOString().slice(0, 10);
+  const nombres = productos.slice(0, 3).map((p) => p.name).join(", ");
+
+  return [
+    {
+      // El enlace lleva la fecha para que cada dia sea un articulo distinto:
+      // es la clave con la que se detecta lo ya publicado.
+      link: `https://www.producthunt.com/leaderboard/daily/${dia}`,
+      title: `Lanzamientos del dia en Product Hunt: ${nombres} y mas`,
+      summary: `Los ${productos.length} productos mas votados del dia.`,
+      publishedAt: hoy,
+      image: null,
+      content: digestContent(productos),
+    },
+  ];
 }
 
 export async function fetchFeed(source: Source): Promise<FeedItem[]> {

@@ -21,10 +21,12 @@ const report = await runIngest({
 });
 
 console.log("\n--- Resumen ---");
-console.log(`Vistas:      ${report.seen}`);
-console.log(`Borradores:  ${report.created}`);
-console.log(`Repetidas:   ${report.skipped}`);
-console.log(`Fallos:      ${report.failed}`);
+console.log(`Vistas:       ${report.seen}`);
+console.log(`Creadas:      ${report.created}`);
+console.log(`Publicadas:   ${report.published}`);
+console.log(`Repetidas:    ${report.duplicates}   (misma noticia en otro medio)`);
+console.log(`Ya conocidas: ${report.skipped}   (misma URL, o sin texto suficiente)`);
+console.log(`Fallos:       ${report.failed}`);
 if (report.errors.length) {
   console.log("\nErrores:");
   for (const e of report.errors) console.log(`  - ${e}`);
