@@ -1,11 +1,11 @@
 [Unit]
-Description=Ejecuta la ingesta de noticias cada 2 horas
+Description=Ejecuta la ingesta de noticias cada 30 minutos
 
 [Timer]
-OnBootSec=10min
-OnUnitActiveSec=2h
+OnBootSec=5min
+OnUnitActiveSec=30min
 # Evita que todos los servidores golpeen los feeds a la vez.
-RandomizedDelaySec=5min
+RandomizedDelaySec=2min
 Persistent=true
 
 [Install]

@@ -3,6 +3,7 @@ import { extract } from "@extractus/article-extractor";
 import { query, queryOne } from "./db";
 import { fingerprint, readingMinutes, slugify } from "./slug";
 import { rewriteArticle } from "./rewriter";
+import { DeepSeekError } from "./deepseek";
 import { attachExtraSource, findDuplicate, titleKey } from "./dedupe";
 import { env } from "./env";
 
@@ -248,6 +249,17 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
         const msg = `${item.title}: ${errMsg(err)}`;
         report.errors.push(msg);
         log(msg);
+
+        // Con la clave mal no hay nada que hacer: seguir recorriendo 45 feeds
+        // solo quema tiempo y acaba matando el servicio por timeout.
+        if (isAuthError(err)) {
+          const fatal =
+            "Credenciales de DeepSeek invalidas o sin saldo: se aborta la ingesta. " +
+            "Revisa DEEPSEEK_API_KEY en el .env.";
+          report.errors.push(fatal);
+          log(fatal);
+          break outer;
+        }
       }
     }
   }
@@ -312,6 +324,11 @@ function pickImage(item: Record<string, unknown>): string | null {
   const content = String(item["content:encoded"] || item.content || "");
   const match = content.match(/<img[^>]+src=["']([^"']+)["']/i);
   return match ? match[1] : null;
+}
+
+/** 401/403 de DeepSeek: clave invalida, revocada o cuenta sin saldo. */
+function isAuthError(err: unknown): boolean {
+  return err instanceof DeepSeekError && (err.status === 401 || err.status === 403);
 }
 
 function errMsg(err: unknown): string {

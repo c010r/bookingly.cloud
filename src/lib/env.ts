@@ -36,9 +36,10 @@ export const env = {
   get autoPublish() {
     return (process.env.AUTO_PUBLISH ?? "1") !== "0";
   },
-  /** Nota minima (0-100) que debe sacar una pieza para publicarse sola. */
+  /** Nota minima (0-100) para publicar sin revision. 0 = publicar todo. */
   get autoPublishMinScore() {
-    return Number(process.env.AUTO_PUBLISH_MIN_SCORE || 78);
+    const v = process.env.AUTO_PUBLISH_MIN_SCORE;
+    return v === undefined || v === "" ? 0 : Number(v);
   },
   siteName: process.env.SITE_NAME || "c010r News",
   siteUrl: (process.env.SITE_URL || "http://localhost:3000").replace(/\/$/, ""),

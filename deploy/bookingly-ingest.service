@@ -11,7 +11,8 @@ EnvironmentFile=/opt/bookingly.cloud/.env
 # tsx directamente con node: npm necesita escribir en $HOME y aqui no hay.
 Environment=HOME=/opt/bookingly.cloud
 ExecStart=/usr/bin/node node_modules/tsx/dist/cli.mjs scripts/ingest.ts
-TimeoutStartSec=1800
+# Menor que el intervalo del temporizador (30 min) para que no se solapen.
+TimeoutStartSec=1200
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=bookingly-ingest

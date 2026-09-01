@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import SiteNav from "@/components/SiteNav";
+import ThemeToggle from "@/components/ThemeToggle";
 import { env } from "@/lib/env";
 import "./globals.css";
 
@@ -17,14 +18,30 @@ export const metadata: Metadata = {
     siteName: env.siteName,
     locale: "es_ES",
   },
+  // El feed sigue publicado y es detectable por lectores y agregadores,
+  // aunque ya no haya un boton visible que apunte a el.
   alternates: {
     types: { "application/rss+xml": `${env.siteUrl}/feed.xml` },
   },
 };
 
+/**
+ * Aplica el tema guardado antes del primer pintado. Si esperaramos a React,
+ * el lector veria un fogonazo del tema equivocado en cada carga.
+ */
+const NO_FLASH = `
+try {
+  var t = localStorage.getItem('tema');
+  if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+} catch (e) {}
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: NO_FLASH }} />
+      </head>
       <body>
         <header className="site-header">
           <div className="wrap inner">
@@ -34,8 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <nav className="nav">
               <Link href="/">Portada</Link>
               <Link href="/temas">Temas</Link>
-              <Link href="/feed.xml">RSS</Link>
-              <Link href="/admin">Panel</Link>
+              <ThemeToggle />
             </nav>
           </div>
         </header>
@@ -49,11 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="site-footer">
           <div className="wrap inner">
             <span>
-              © {new Date().getFullYear()} {env.siteName}. Contenido reescrito con IA a partir
-              de fuentes publicas, siempre enlazadas y atribuidas.
-            </span>
-            <span>
-              <Link href="/feed.xml">RSS</Link>
+              © {new Date().getFullYear()} {env.siteName}
             </span>
           </div>
         </footer>
