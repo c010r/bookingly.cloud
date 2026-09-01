@@ -325,7 +325,7 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
             source.name,
             item.link,
             item.title,
-            author ?? null,
+            firmaDistintaDelMedio(author ?? null, source.name),
             item.publishedAt,
             fp,
             titleKey(item.title),
@@ -448,7 +448,29 @@ export function limpiarAutor(bruto: unknown): string | null {
 
   // Firmas genericas que no aportan nada al lector.
   if (!limpio || /^(admin|editor|staff|redaccion|news ?desk)$/i.test(limpio)) return null;
-  return limpio.slice(0, 120);
+
+  // Muchos feeds firman con el arroba del propio medio o de una seccion
+  // ("@9to5Google", "@9to5toys"). Una persona casi siempre tiene nombre y
+  // apellido, asi que un arroba de una sola palabra no es un redactor.
+  if (/^@/.test(limpio) && !/\s/.test(limpio)) return null;
+
+  return limpio.replace(/^@/, "").slice(0, 120);
+}
+
+/**
+ * Descarta la firma cuando en realidad es el nombre del medio: atribuir
+ * "el articulo de 9to5Google en 9to5Google" no dice nada.
+ */
+export function firmaDistintaDelMedio(
+  autor: string | null,
+  medio: string
+): string | null {
+  if (!autor) return null;
+  const norm = (t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const a = norm(autor);
+  const m = norm(medio);
+  if (!a || a === m || m.includes(a) || a.includes(m)) return null;
+  return autor;
 }
 
 function pickImage(item: Record<string, unknown>): string | null {

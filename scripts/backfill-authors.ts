@@ -12,17 +12,26 @@
 import "dotenv/config";
 import { extract } from "@extractus/article-extractor";
 import { query, closePool } from "../src/lib/db";
-import { limpiarAutor } from "../src/lib/ingest";
+import { firmaDistintaDelMedio, limpiarAutor } from "../src/lib/ingest";
 
 const args = process.argv.slice(2);
 const flag = (n: string) => args.find((a) => a.startsWith(`--${n}=`))?.split("=")[1];
 const max = Number(flag("max") || 500);
 const dry = args.includes("--dry");
 
-const pendientes = await query<{ id: number; title: string; source_url: string }>(
-  `SELECT id, title, source_url
+// Se revisan tambien las que ya tienen firma: las primeras se guardaron
+// antes de saber descartar los arrobas del propio medio.
+const pendientes = await query<{
+  id: number;
+  title: string;
+  source_url: string;
+  source_name: string;
+  source_author: string | null;
+}>(
+  `SELECT id, title, source_url, source_name, source_author
      FROM articles
-    WHERE source_author IS NULL
+    WHERE source_author IS NULL OR source_author LIKE '@%'
+       OR lower(replace(source_author, ' ', '')) = lower(replace(source_name, ' ', ''))
     ORDER BY published_at DESC NULLS LAST
     LIMIT $1`,
   [max]
@@ -36,11 +45,18 @@ let fallos = 0;
 
 for (const a of pendientes) {
   try {
-    const art = await extract(a.source_url);
-    const autor = limpiarAutor(art?.author);
+    // Si ya tenia una firma valida no hace falta volver a descargar la pagina.
+    const guardada = firmaDistintaDelMedio(limpiarAutor(a.source_author), a.source_name);
+    const autor =
+      guardada ??
+      firmaDistintaDelMedio(limpiarAutor((await extract(a.source_url))?.author), a.source_name);
 
     if (!autor) {
       sinFirma++;
+      // Puede haber una firma invalida guardada de una pasada anterior.
+      if (!dry && a.source_author) {
+        await query(`UPDATE articles SET source_author = NULL WHERE id = $1`, [a.id]);
+      }
       console.log(`  --  ${a.title.slice(0, 62)}`);
       continue;
     }
