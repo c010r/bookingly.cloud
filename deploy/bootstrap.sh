@@ -196,6 +196,10 @@ if ! systemctl enable --now bookingly.service; then
 fi
 systemctl enable --now bookingly-ingest.timer
 
+say "Atajo de despliegue"
+install -m 755 "$APP_DIR/deploy/bookingly-deploy" /usr/local/bin/bookingly-deploy
+echo "Instalado: bookingly-deploy"
+
 say "Nginx"
 sed "s/__DOMAIN__/${DOMAIN}/g; s/__PORT__/${PORT}/g" \
   "$APP_DIR/deploy/nginx-site.conf" > "/etc/nginx/sites-available/${DOMAIN}"

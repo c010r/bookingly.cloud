@@ -89,25 +89,23 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | `npx tsx scripts/check-feed.ts <url>` | Prueba un feed suelto sin tocar la base de datos |
 | `npx tsx scripts/selftest.ts` | Test de los helpers puros (dedupe, slugs, markdown) |
 
-## Ingesta automática
+## Despliegue
 
-Llama al endpoint con el secreto:
+El servidor tiene un clon del repositorio y se despliega con un comando:
 
 ```bash
-curl -H "Authorization: Bearer $CRON_SECRET" https://tu-dominio/api/cron/ingest
+ssh bookingly
+bookingly-deploy
 ```
 
-En Vercel, con `vercel.json`:
+Pull, dependencias, migraciones, build, reinicio y comprobación de salud, con vuelta atrás
+automática si algo falla. Detalles completos en [DEPLOY.md](DEPLOY.md).
 
-```json
-{ "crons": [{ "path": "/api/cron/ingest", "schedule": "0 */2 * * *" }] }
-```
+La ingesta corre sola cada 2 h con un temporizador de systemd. Para lanzarla a mano:
+`bookingly-deploy --ingest`.
 
-En un VPS, un cron cada dos horas:
-
-```
-0 */2 * * * curl -sS -H "Authorization: Bearer XXX" https://tu-dominio/api/cron/ingest
-```
+También existe el endpoint `/api/cron/ingest`, protegido con `Authorization: Bearer
+$CRON_SECRET`, por si prefieres dispararla desde fuera.
 
 ## Panel
 

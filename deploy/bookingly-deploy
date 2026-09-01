@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+#
+# Atajo instalado en /usr/local/bin/bookingly-deploy por bootstrap.sh.
+# Despliega la ultima version de main:
+#
+#   bookingly-deploy            despliega origin/main
+#   bookingly-deploy --status   estado sin tocar nada
+#   bookingly-deploy --logs     logs de la aplicacion en vivo
+#   bookingly-deploy --ingest   lanza una ingesta ahora y la sigue
+#
+exec_dir="/opt/bookingly.cloud"
+
+case "${1:-}" in
+  --status)
+    systemctl --no-pager status bookingly | head -12
+    echo
+    echo "Version desplegada: $(git -C "$exec_dir" log --oneline -1)"
+    echo "Ultima ingesta:"
+    journalctl -u bookingly-ingest -n 5 --no-pager | tail -5
+    ;;
+  --logs)
+    journalctl -u bookingly -f
+    ;;
+  --ingest)
+    systemctl start bookingly-ingest
+    journalctl -u bookingly-ingest -f
+    ;;
+  -h|--help)
+    sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+    ;;
+  *)
+    exec bash "$exec_dir/deploy/deploy.sh" "$@"
+    ;;
+esac

@@ -1,0 +1,58 @@
+name: Verificacion
+
+# Solo comprueba que el codigo esta sano. El despliegue NO pasa por aqui: se
+# hace en el servidor con 'bookingly-deploy' (ver DEPLOY.md).
+#
+# No necesita ningun secreto: si esto esta en verde, es seguro desplegar.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verificar:
+    name: Tipos, tests y compilacion
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Tipos
+        run: npx tsc --noEmit
+
+      - name: Tests de los helpers
+        run: npx tsx scripts/selftest.ts
+
+      - name: Compilacion
+        run: npm run build
+        env:
+          SITE_URL: https://bookingly.cloud
+
+      - name: Sintaxis de los scripts de despliegue
+        run: |
+          bash -n deploy/bootstrap.sh
+          bash -n deploy/deploy.sh
+          bash -n deploy/bookingly-deploy
+
+      - name: Listo para desplegar
+        run: |
+          {
+            echo "### Verificacion superada"
+            echo ""
+            echo "Para desplegar, en el servidor:"
+            echo ""
+            echo '```'
+            echo "ssh bookingly"
+            echo "bookingly-deploy"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
