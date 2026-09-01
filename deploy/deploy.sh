@@ -28,6 +28,11 @@ as_app() {
 }
 
 cd "$APP_DIR"
+
+# El repositorio pertenece a $APP_USER pero git lo ejecuta root: sin esto,
+# git aborta con "detected dubious ownership" y el despliegue no descarga nada.
+git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
+
 PREVIOUS="$(git rev-parse HEAD)"
 
 say "Descargando ${BRANCH}"

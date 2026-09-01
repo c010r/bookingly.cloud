@@ -76,6 +76,8 @@ if ! sudo -u postgres psql -lqt | cut -d\| -f1 | grep -qw "$DB_NAME"; then
 fi
 
 say "Codigo fuente en ${APP_DIR}"
+# El directorio acaba perteneciendo a $APP_USER y git corre como root.
+git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
 if [ -d "$APP_DIR/.git" ]; then
   git -C "$APP_DIR" fetch --all --prune
   git -C "$APP_DIR" reset --hard origin/main
