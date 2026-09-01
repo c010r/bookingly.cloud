@@ -1,4 +1,4 @@
-import { chat, parseJsonLoose } from "./deepseek";
+import { chat, parseJsonLoose } from "./llm";
 import { env } from "./env";
 import { CATEGORY_PROMPT_BLOCK, normalizeCategory, type CategorySlug } from "./categories";
 
@@ -159,7 +159,7 @@ Reescribela siguiendo tus instrucciones y devuelve solo el JSON.`;
     // La nota del modelo se corrige con senales objetivas del propio texto.
     qualityScore: applyHeuristics(modelScore, bodyMd, title),
     qualityNotes: clean(parsed.calidad_nota).slice(0, 300),
-    model: env.deepseekModel,
+    model: env.llmModel,
   };
 }
 

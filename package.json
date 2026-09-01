@@ -10,7 +10,8 @@
     "lint": "next lint",
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed": "tsx scripts/seed-sources.ts",
-    "ingest": "tsx scripts/ingest.ts"
+    "ingest": "tsx scripts/ingest.ts",
+    "check:llm": "tsx scripts/check-llm.ts"
   },
   "dependencies": {
     "@extractus/article-extractor": "^8.0.16",

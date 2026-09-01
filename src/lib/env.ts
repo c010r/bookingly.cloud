@@ -11,14 +11,31 @@ export const env = {
   get pgSsl() {
     return process.env.PGSSL === "1";
   },
-  get deepseekKey() {
-    return required("DEEPSEEK_API_KEY");
+  /**
+   * El redactor habla con cualquier API compatible con OpenAI. Por defecto,
+   * Groq: capa gratuita amplia y sin tarjeta. Si en el .env solo quedan las
+   * variables DEEPSEEK_* de la version anterior, se respetan en bloque para no
+   * romper una instalacion ya desplegada.
+   */
+  get llmKey() {
+    const v =
+      process.env.LLM_API_KEY || process.env.GROQ_API_KEY || process.env.DEEPSEEK_API_KEY;
+    if (!v) return required("LLM_API_KEY");
+    return v;
   },
-  get deepseekBaseUrl() {
-    return process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
+  get llmBaseUrl() {
+    if (this.usaConfigAntigua) return process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
+    return process.env.LLM_BASE_URL || "https://api.groq.com/openai/v1";
   },
-  get deepseekModel() {
-    return process.env.DEEPSEEK_MODEL || "deepseek-chat";
+  get llmModel() {
+    if (this.usaConfigAntigua) return process.env.DEEPSEEK_MODEL || "deepseek-chat";
+    return process.env.LLM_MODEL || "llama-3.3-70b-versatile";
+  },
+  /** Solo hay claves DEEPSEEK_*: es un .env anterior al cambio de proveedor. */
+  get usaConfigAntigua() {
+    return Boolean(
+      !process.env.LLM_API_KEY && !process.env.GROQ_API_KEY && process.env.DEEPSEEK_API_KEY
+    );
   },
   get adminPassword() {
     return required("ADMIN_PASSWORD");

@@ -72,7 +72,7 @@ Instala Node 22, PostgreSQL, Nginx y Certbot; crea la base con contraseña aleat
 el `.env`; carga las 45 fuentes; compila; levanta systemd; configura el proxy inverso; emite
 el TLS e instala el atajo `bookingly-deploy`.
 
-Acepta por entorno: `DOMAIN`, `PORT`, `DEEPSEEK_API_KEY`, `ADMIN_PASSWORD`, `SITE_NAME`.
+Acepta por entorno: `DOMAIN`, `PORT`, `LLM_API_KEY`, `ADMIN_PASSWORD`, `SITE_NAME`.
 
 ## Configuración
 
@@ -81,11 +81,12 @@ Todo vive en `/opt/bookingly.cloud/.env` (permisos `600`, fuera de git). Tras ed
 
 | Variable | Para qué |
 |---|---|
-| `DEEPSEEK_API_KEY` | Sin ella no se reescribe nada |
+| `LLM_API_KEY` | Sin ella no se reescribe nada. Gratis en <https://console.groq.com/keys> |
 | `AUTO_PUBLISH` | `0` deja todo en borrador y devuelve el control editorial a una persona |
 | `AUTO_PUBLISH_MIN_SCORE` | Sube el listón (más estricto) o bájalo (más volumen) |
-| `INGEST_MAX_PER_RUN` | Artículos nuevos por ejecución; controla el gasto en DeepSeek |
-| `DEEPSEEK_MODEL` | `deepseek-reasoner` para piezas más elaboradas y más caras |
+| `INGEST_MAX_PER_RUN` | Artículos nuevos por ejecución; controla el consumo de cuota |
+| `LLM_MODEL` | Modelo a usar. Por defecto `llama-3.3-70b-versatile` (Groq) |
+| `LLM_BASE_URL` | Cambia de proveedor: vale cualquier API compatible con OpenAI |
 
 La contraseña del panel está en `/root/bookingly-credenciales.txt`. Guárdala en tu gestor y
 borra el fichero.

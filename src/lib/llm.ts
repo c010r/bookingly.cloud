@@ -10,23 +10,24 @@ export type ChatOptions = {
   signal?: AbortSignal;
 };
 
-export class DeepSeekError extends Error {
+export class LlmError extends Error {
   constructor(
     message: string,
     readonly status?: number
   ) {
     super(message);
-    this.name = "DeepSeekError";
+    this.name = "LlmError";
   }
 }
 
 /**
- * DeepSeek expone una API compatible con la de OpenAI, asi que hablamos con
- * /chat/completions directamente y nos ahorramos un SDK.
+ * Hablamos el protocolo de OpenAI (/chat/completions) directamente, sin SDK.
+ * Eso vale para Groq, DeepSeek, Gemini, OpenRouter, Cerebras o cualquier otro
+ * proveedor compatible: se cambia de uno a otro tocando solo el .env.
  */
 export async function chat(opts: ChatOptions): Promise<string> {
   const body = {
-    model: env.deepseekModel,
+    model: env.llmModel,
     messages: opts.messages,
     temperature: opts.temperature ?? 0.7,
     max_tokens: opts.maxTokens ?? 4000,
@@ -34,11 +35,11 @@ export async function chat(opts: ChatOptions): Promise<string> {
     ...(opts.json ? { response_format: { type: "json_object" } } : {}),
   };
 
-  const res = await fetchWithRetry(`${env.deepseekBaseUrl}/chat/completions`, {
+  const res = await fetchWithRetry(`${env.llmBaseUrl}/chat/completions`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      authorization: `Bearer ${env.deepseekKey}`,
+      authorization: `Bearer ${env.llmKey}`,
     },
     body: JSON.stringify(body),
     signal: opts.signal,
@@ -48,7 +49,7 @@ export async function chat(opts: ChatOptions): Promise<string> {
     choices?: { message?: { content?: string } }[];
   };
   const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new DeepSeekError("DeepSeek devolvio una respuesta vacia");
+  if (!content) throw new LlmError("El modelo devolvio una respuesta vacia");
   return content;
 }
 
@@ -61,18 +62,18 @@ async function fetchWithRetry(url: string, init: RequestInit, attempts = 3): Pro
       const text = await res.text().catch(() => "");
       // 429 y 5xx son reintentables; el resto es un error nuestro.
       if (res.status !== 429 && res.status < 500) {
-        throw new DeepSeekError(`DeepSeek ${res.status}: ${text.slice(0, 300)}`, res.status);
+        throw new LlmError(`LLM ${res.status}: ${text.slice(0, 300)}`, res.status);
       }
-      lastError = new DeepSeekError(`DeepSeek ${res.status}: ${text.slice(0, 300)}`, res.status);
+      lastError = new LlmError(`LLM ${res.status}: ${text.slice(0, 300)}`, res.status);
     } catch (err) {
-      if (err instanceof DeepSeekError && err.status && err.status < 500 && err.status !== 429) {
+      if (err instanceof LlmError && err.status && err.status < 500 && err.status !== 429) {
         throw err;
       }
       lastError = err;
     }
     await sleep(1000 * 2 ** i);
   }
-  throw lastError instanceof Error ? lastError : new DeepSeekError("Fallo al llamar a DeepSeek");
+  throw lastError instanceof Error ? lastError : new LlmError("Fallo al llamar al modelo");
 }
 
 function sleep(ms: number) {
@@ -94,6 +95,6 @@ export function parseJsonLoose<T>(raw: string): T {
     if (start !== -1 && end > start) {
       return JSON.parse(cleaned.slice(start, end + 1)) as T;
     }
-    throw new DeepSeekError("No se pudo parsear el JSON devuelto por DeepSeek");
+    throw new LlmError("No se pudo parsear el JSON devuelto por el modelo");
   }
 }

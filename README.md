@@ -1,7 +1,7 @@
 # c010r News
 
 Medio digital de noticias de tecnología. Rastrea feeds RSS, detecta cuándo varios medios
-cuentan la misma noticia, la reescribe con voz propia usando DeepSeek, la clasifica en una
+cuentan la misma noticia, la reescribe con voz propia usando un LLM (Groq por defecto), la clasifica en una
 sección y decide por sí mismo si tiene calidad para publicarse.
 
 ## Cómo funciona
@@ -14,7 +14,7 @@ Feeds RSS  ──►  ¿URL ya vista?          ──► sí: descartar
               Extraer el artículo completo
                         │
                         ▼
-              Reescritura con DeepSeek
+              Reescritura con el LLM       
               (voz de periodista, categoría, autoevaluación 0-100)
                         │
                         ▼
@@ -60,7 +60,7 @@ adicionales detectados como duplicados. Aparece en el pie del artículo, en `sch
 ## Puesta en marcha
 
 ```bash
-cp .env.example .env      # rellena DATABASE_URL, DEEPSEEK_API_KEY, ADMIN_PASSWORD, AUTH_SECRET, CRON_SECRET
+cp .env.example .env      # rellena DATABASE_URL, LLM_API_KEY, ADMIN_PASSWORD, AUTH_SECRET, CRON_SECRET
 npm install
 npm run db:migrate        # crea el esquema (idempotente)
 npm run db:seed           # carga las 45 fuentes RSS
@@ -82,9 +82,10 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | `npm run db:migrate` | Aplica `db/schema.sql` |
 | `npm run db:seed` | Carga las fuentes RSS |
 | `npm run db:seed -- --check` | Además comprueba que cada feed responde |
+| `npm run check:llm` | Comprueba que la clave y el modelo responden |
 | `npm run ingest` | Ingesta completa |
 | `npm run ingest -- --max=3` | Solo 3 noticias nuevas |
-| `npm run ingest -- --dry` | Simula sin gastar tokens de DeepSeek |
+| `npm run ingest -- --dry` | Simula sin gastar tokens del modelo |
 | `npm run ingest -- --source=7` | Solo una fuente |
 | `npx tsx scripts/check-feed.ts <url>` | Prueba un feed suelto sin tocar la base de datos |
 | `npx tsx scripts/selftest.ts` | Test de los helpers puros (dedupe, slugs, markdown) |
@@ -124,7 +125,7 @@ scripts/                   migrate, seed, ingest, check-feed, selftest
 src/lib/
   categories.ts            las 10 secciones fijas del medio
   dedupe.ts                detección de noticias repetidas
-  deepseek.ts              cliente HTTP con reintentos
+  llm.ts                   cliente HTTP con reintentos (API estilo OpenAI)
   rewriter.ts              ★ la voz editorial y el control de calidad
   ingest.ts                pipeline: feed → dedupe → extraer → reescribir → publicar
   repo.ts                  consultas SQL

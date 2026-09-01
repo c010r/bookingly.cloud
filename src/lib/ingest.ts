@@ -3,7 +3,7 @@ import { extract } from "@extractus/article-extractor";
 import { query, queryOne } from "./db";
 import { fingerprint, readingMinutes, slugify } from "./slug";
 import { rewriteArticle } from "./rewriter";
-import { DeepSeekError } from "./deepseek";
+import { LlmError } from "./llm";
 import { attachExtraSource, findDuplicate, titleKey } from "./dedupe";
 import { env } from "./env";
 import { readme, repoContent, trendingRepos } from "./collectors/github";
@@ -163,7 +163,7 @@ export async function fetchArticleText(
 export type IngestOptions = {
   maxPerRun?: number;
   sourceId?: number;
-  /** No llama a DeepSeek, solo reporta que se ingeriria. */
+  /** No llama al modelo, solo reporta que se ingeriria. */
   dryRun?: boolean;
   /** Fuerza el modo de publicacion, ignorando la configuracion del entorno. */
   autoPublish?: boolean;
@@ -364,8 +364,8 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
         // solo quema tiempo y acaba matando el servicio por timeout.
         if (isAuthError(err)) {
           const fatal =
-            "Credenciales de DeepSeek invalidas o sin saldo: se aborta la ingesta. " +
-            "Revisa DEEPSEEK_API_KEY en el .env.";
+            "Credenciales del modelo invalidas o sin saldo: se aborta la ingesta. " +
+            "Revisa LLM_API_KEY en el .env.";
           report.errors.push(fatal);
           log(fatal);
           break outer;
@@ -488,9 +488,9 @@ function pickImage(item: Record<string, unknown>): string | null {
   return match ? match[1] : null;
 }
 
-/** 401/403 de DeepSeek: clave invalida, revocada o cuenta sin saldo. */
+/** 401/403 del proveedor: clave invalida, revocada o cuenta sin saldo. */
 function isAuthError(err: unknown): boolean {
-  return err instanceof DeepSeekError && (err.status === 401 || err.status === 403);
+  return err instanceof LlmError && (err.status === 401 || err.status === 403);
 }
 
 /** Fisher-Yates. */

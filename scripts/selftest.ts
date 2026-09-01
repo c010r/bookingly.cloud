@@ -1,7 +1,7 @@
-/** Prueba rapida de los helpers puros: no toca red, ni base de datos, ni DeepSeek. */
+/** Prueba rapida de los helpers puros: no toca red, ni base de datos, ni el modelo. */
 import { renderMarkdown, excerpt } from "../src/lib/markdown";
 import { slugify, fingerprint, readingMinutes } from "../src/lib/slug";
-import { parseJsonLoose } from "../src/lib/deepseek";
+import { parseJsonLoose } from "../src/lib/llm";
 import { similarity, titleKey, normalizeTitle } from "../src/lib/dedupe";
 import { normalizeCategory } from "../src/lib/categories";
 

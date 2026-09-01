@@ -3,7 +3,7 @@
  *
  *   npm run ingest              -> ingesta normal (limite INGEST_MAX_PER_RUN)
  *   npm run ingest -- --max=3   -> solo 3 articulos nuevos
- *   npm run ingest -- --dry     -> no llama a DeepSeek, solo lista que haria
+ *   npm run ingest -- --dry     -> no llama al modelo, solo lista que haria
  *   npm run ingest -- --source=2
  */
 import "dotenv/config";

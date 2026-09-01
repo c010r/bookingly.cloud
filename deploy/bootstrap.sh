@@ -97,9 +97,9 @@ if [ ! -f "$ENV_FILE" ]; then
 DATABASE_URL=postgres://${DB_USER}:${DB_PASS}@127.0.0.1:5432/${DB_NAME}
 PGSSL=0
 
-DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-PENDIENTE_PON_TU_CLAVE}
-DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-chat}
+LLM_API_KEY=${LLM_API_KEY:-PENDIENTE_PON_TU_CLAVE}
+LLM_BASE_URL=${LLM_BASE_URL:-https://api.groq.com/openai/v1}
+LLM_MODEL=${LLM_MODEL:-llama-3.3-70b-versatile}
 
 SITE_NAME=${SITE_NAME:-c010r News}
 SITE_URL=https://${DOMAIN}
@@ -132,10 +132,19 @@ CREDS
 else
   # Refrescamos solo la cadena de conexion, respetando el resto de la configuracion.
   sed -i "s|^DATABASE_URL=.*|DATABASE_URL=postgres://${DB_USER}:${DB_PASS}@127.0.0.1:5432/${DB_NAME}|" "$ENV_FILE"
-  # Si el workflow trae una clave de DeepSeek nueva, la actualizamos.
-  if [ -n "${DEEPSEEK_API_KEY:-}" ]; then
-    sed -i "s|^DEEPSEEK_API_KEY=.*|DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}|" "$ENV_FILE"
-    echo "Clave de DeepSeek actualizada."
+  # Si el workflow trae una clave del modelo nueva, la actualizamos. En un .env
+  # de la epoca de DeepSeek no existe la linea, asi que la anadimos.
+  if [ -n "${LLM_API_KEY:-}" ]; then
+    if grep -q '^LLM_API_KEY=' "$ENV_FILE"; then
+      sed -i "s|^LLM_API_KEY=.*|LLM_API_KEY=${LLM_API_KEY}|" "$ENV_FILE"
+    else
+      printf '
+LLM_API_KEY=%s
+LLM_BASE_URL=%s
+LLM_MODEL=%s
+'         "${LLM_API_KEY}"         "${LLM_BASE_URL:-https://api.groq.com/openai/v1}"         "${LLM_MODEL:-llama-3.3-70b-versatile}" >> "$ENV_FILE"
+    fi
+    echo "Clave del modelo actualizada."
   fi
   echo "Se conserva el ${ENV_FILE} existente."
   # El puerto elegido en la primera instalacion manda sobre el valor por defecto.
@@ -246,12 +255,13 @@ echo "  Panel:  https://${DOMAIN}/admin"
 echo "  Credenciales: ${CREDS_FILE}"
 echo
 
-if grep -q '^DEEPSEEK_API_KEY=PENDIENTE' "$ENV_FILE"; then
-  echo "  PENDIENTE: no hay clave de DeepSeek. Sin ella no se reescribe nada."
-  echo "  Define el secreto DEEPSEEK_API_KEY en GitHub y relanza el workflow,"
-  echo "  o editala a mano en ${ENV_FILE} y ejecuta: systemctl restart bookingly"
+if grep -qE '^(LLM|DEEPSEEK)_API_KEY=PENDIENTE' "$ENV_FILE" || ! grep -qE '^(LLM|GROQ|DEEPSEEK)_API_KEY=.' "$ENV_FILE"; then
+  echo "  PENDIENTE: no hay clave del modelo. Sin ella no se reescribe nada."
+  echo "  Sacala gratis en https://console.groq.com/keys, define el secreto"
+  echo "  LLM_API_KEY en GitHub y relanza el workflow, o editala a mano en"
+  echo "  ${ENV_FILE} y ejecuta: systemctl restart bookingly"
 else
-  echo "  Clave de DeepSeek configurada."
+  echo "  Clave del modelo configurada."
 fi
 
 echo

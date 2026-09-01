@@ -1,5 +1,5 @@
 /**
- * Comprueba un feed sin tocar la base de datos ni gastar tokens de DeepSeek.
+ * Comprueba un feed sin tocar la base de datos ni gastar tokens del modelo.
  *
  *   npx tsx scripts/check-feed.ts https://feeds.arstechnica.com/arstechnica/index
  */
