@@ -200,6 +200,7 @@ systemctl enable --now bookingly-ingest.timer
 
 say "Atajo de despliegue"
 install -m 755 "$APP_DIR/deploy/bookingly-deploy" /usr/local/bin/bookingly-deploy
+chmod +x "$APP_DIR/deploy/set-admin-password.sh"
 echo "Instalado: bookingly-deploy"
 
 say "Nginx"
