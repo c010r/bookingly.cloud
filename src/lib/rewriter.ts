@@ -119,7 +119,7 @@ ${source}
 
 Reescribela siguiendo tus instrucciones y devuelve solo el JSON.`;
 
-  const raw = await chat({
+  const respuesta = await chat({
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: userPrompt },
@@ -129,7 +129,7 @@ Reescribela siguiendo tus instrucciones y devuelve solo el JSON.`;
     temperature: 0.85,
   });
 
-  const parsed = parseJsonLoose<RawRewrite>(raw);
+  const parsed = parseJsonLoose<RawRewrite>(respuesta.content);
 
   const title = clean(parsed.titular);
   const bodyMd = (parsed.cuerpo_markdown || "").trim();
@@ -159,7 +159,7 @@ Reescribela siguiendo tus instrucciones y devuelve solo el JSON.`;
     // La nota del modelo se corrige con senales objetivas del propio texto.
     qualityScore: applyHeuristics(modelScore, bodyMd, title),
     qualityNotes: clean(parsed.calidad_nota).slice(0, 300),
-    model: env.llmModel,
+    model: respuesta.model,
   };
 }
 

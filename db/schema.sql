@@ -79,3 +79,14 @@ ALTER TABLE sources ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'rss';
 
 -- Firma del articulo original, para atribuir a quien lo escribio.
 ALTER TABLE articles ADD COLUMN IF NOT EXISTS source_author TEXT;
+
+-- Modelos apartados temporalmente: agotaron su cupo diario o el proveedor los
+-- retiro. Vive en la base de datos porque la ingesta arranca un proceso nuevo
+-- cada 5 minutos y, sin esto, cada tanda volveria a chocar contra el mismo
+-- muro y gastaria peticiones en errores.
+CREATE TABLE IF NOT EXISTS llm_cooldowns (
+  model      TEXT PRIMARY KEY,
+  reason     TEXT NOT NULL,
+  until      TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

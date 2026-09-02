@@ -27,9 +27,24 @@ export const env = {
     if (this.usaConfigAntigua) return process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
     return process.env.LLM_BASE_URL || "https://api.groq.com/openai/v1";
   },
+  /**
+   * Lista de modelos por orden de preferencia, separados por comas. Cada uno
+   * tiene su propio cupo diario, asi que rotar entre varios multiplica lo que
+   * cabe en un dia; el cliente pasa al siguiente cuando uno se agota.
+   */
+  get llmModels(): string[] {
+    const crudo = this.usaConfigAntigua
+      ? process.env.DEEPSEEK_MODEL || "deepseek-chat"
+      : process.env.LLM_MODEL || "openai/gpt-oss-120b";
+    const lista = crudo
+      .split(",")
+      .map((m) => m.trim())
+      .filter(Boolean);
+    return lista.length > 0 ? lista : ["openai/gpt-oss-120b"];
+  },
+  /** El preferido. Solo para mostrarlo; quien escribe cada pieza lo dice chat(). */
   get llmModel() {
-    if (this.usaConfigAntigua) return process.env.DEEPSEEK_MODEL || "deepseek-chat";
-    return process.env.LLM_MODEL || "openai/gpt-oss-120b";
+    return this.llmModels[0];
   },
   /**
    * Tokens por minuto que admite el proveedor. Es el limite que aprieta en las
