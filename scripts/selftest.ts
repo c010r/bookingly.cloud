@@ -43,8 +43,7 @@ check(
 );
 check("minutos de lectura", readingMinutes(new Array(420).fill("palabra").join(" ")) === 2);
 
-// Una nota recien publicada no debe mostrar "0 vistas": queda como si fallara.
-check("vistas: ninguna no se muestra", formatViews(0) === "" && formatViews(null) === "");
+check("vistas: cero tambien se muestra", formatViews(0) === "0 vistas" && formatViews(null) === "0 vistas");
 check("vistas: singular", formatViews(1) === "1 vista", formatViews(1));
 // En espanol las cifras de cuatro digitos van sin separador; a partir de cinco,
 // con punto. Lo hace toLocaleString y conviene fijarlo para que no sorprenda.

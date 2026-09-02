@@ -30,11 +30,14 @@ export function formatRelative(d: Date | string | null): string {
 }
 
 /**
- * "1.234 vistas". Devuelve cadena vacia cuando no hay ninguna: una nota recien
- * publicada mostrando "0 vistas" parece rota, y ademas quien la lee primero
- * veria un cero, porque el contador se incrementa despues de pintar la pagina.
+ * "1.234 vistas". Se muestra siempre, tambien con cero: es un dato del
+ * articulo como la fecha o los minutos de lectura, y ocultarlo cuando esta a
+ * cero lo hacia desaparecer de casi todas las notas.
+ *
+ * Ojo: quien abre una nota por primera vez vera "0 vistas", porque el contador
+ * se incrementa desde el navegador despues de pintar la pagina.
  */
 export function formatViews(n: number | null | undefined): string {
-  if (!n || n < 1) return "";
-  return `${n.toLocaleString("es-ES")} ${n === 1 ? "vista" : "vistas"}`;
+  const v = n && n > 0 ? n : 0;
+  return `${v.toLocaleString("es-ES")} ${v === 1 ? "vista" : "vistas"}`;
 }

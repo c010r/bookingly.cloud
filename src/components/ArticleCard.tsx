@@ -51,12 +51,8 @@ export default function ArticleCard({
             <span>{article.reading_minutes} min</span>
             <span className="opacity-40">·</span>
             <span>{extra > 0 ? `${extra + 1} fuentes` : article.source_name}</span>
-            {vistas && (
-              <>
-                <span className="opacity-40">·</span>
-                <span>{vistas}</span>
-              </>
-            )}
+            <span className="opacity-40">·</span>
+            <span>{vistas}</span>
           </div>
         </div>
       </Link>
