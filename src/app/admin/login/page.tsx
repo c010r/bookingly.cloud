@@ -9,21 +9,23 @@ export default function LoginPage() {
   return (
     <form
       action={formAction}
-      className="mx-auto mt-[14vh] max-w-sm rounded-xl border border-line bg-surface p-8"
+      className="mx-auto mt-[14vh] max-w-sm border border-line bg-surface p-8"
     >
-      <h2 className="mb-5 font-mono text-lg font-semibold">
-        <span className="text-accent">$</span> acceso a la redaccion
+      {/* Sin el prompt de terminal del diseno anterior: la mancheta del sitio
+          ya no habla ese idioma. */}
+      <h2 className="mb-6 border-b-2 border-fg pb-3 text-xl font-extrabold tracking-tight">
+        Acceso a la redaccion
       </h2>
 
       {error && (
-        <p className="mb-4 rounded-lg border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
+        <p className="mb-4 border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
           {error}
         </p>
       )}
 
       <label
         htmlFor="password"
-        className="mb-1.5 block font-mono text-[11px] uppercase tracking-widest text-fg-faint"
+        className="etiqueta mb-1.5 block text-fg-faint"
       >
         Contrasena
       </label>
@@ -33,13 +35,13 @@ export default function LoginPage() {
         type="password"
         autoFocus
         required
-        className="mb-5 w-full rounded-lg border border-line bg-bg px-3 py-2.5 outline-none focus:border-accent"
+        className="mb-5 w-full border border-line bg-bg px-3 py-2.5 outline-none focus:border-accent"
       />
 
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-lg border border-accent bg-accent py-2.5 text-sm font-semibold text-accent-fg transition-opacity hover:opacity-85 disabled:opacity-50"
+        className="w-full border border-accent bg-accent py-2.5 text-sm font-semibold text-accent-fg transition-opacity hover:opacity-85 disabled:opacity-50"
       >
         {pending ? "Comprobando..." : "Entrar"}
       </button>

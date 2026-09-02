@@ -13,7 +13,7 @@ export default function AdminBar({ title }: { title: string }) {
   return (
     <div className="mb-7 flex flex-wrap items-center justify-between gap-4 border-b border-line pb-5">
       <div>
-        <h1 className="font-mono text-base font-semibold">{title}</h1>
+        <h1 className="text-lg font-extrabold tracking-tight">{title}</h1>
         <nav className="mt-2 flex flex-wrap gap-4 text-sm">
           {enlaces.map((e) => (
             <Link
@@ -29,7 +29,7 @@ export default function AdminBar({ title }: { title: string }) {
       <form action={logoutAction}>
         <button
           type="submit"
-          className="rounded-lg border border-line px-4 py-2 text-sm transition-colors hover:border-danger hover:text-danger"
+          className="border border-line px-4 py-2 text-sm transition-colors hover:border-danger hover:text-danger"
         >
           Salir
         </button>

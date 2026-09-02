@@ -10,9 +10,9 @@ import { deleteArticleAction, saveArticleAction } from "../../actions";
 export const dynamic = "force-dynamic";
 
 const CAMPO =
-  "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-[14px] outline-none focus:border-accent";
+  "w-full border border-line bg-surface px-3 py-2.5 text-[14px] outline-none focus:border-accent";
 const ETIQUETA =
-  "mb-1.5 block font-mono text-[11px] uppercase tracking-widest text-fg-faint";
+  "mb-1.5 block etiqueta text-fg-faint";
 
 export default async function EditArticlePage({
   params,
@@ -33,12 +33,12 @@ export default async function EditArticlePage({
       <AdminBar title="Editar articulo" />
 
       {ok && (
-        <p className="mb-5 rounded-lg border border-accent/50 bg-accent/10 px-4 py-3 text-sm text-accent">
+        <p className="mb-5 border border-accent/50 bg-accent/10 px-4 py-3 text-sm text-accent">
           Cambios {decodeURIComponent(ok)}.
         </p>
       )}
 
-      <div className="mb-6 rounded-xl border border-line bg-surface p-4 text-[13.5px] text-fg-muted">
+      <div className="mb-6 border border-line bg-surface p-4 text-[13.5px] text-fg-muted">
         <div className="flex flex-wrap items-center gap-2">
           <strong className="text-fg">Original:</strong>
           <a
@@ -50,15 +50,15 @@ export default async function EditArticlePage({
             {article.source_title}
           </a>
           <span className="text-fg-faint">— {article.source_name}</span>
-          <span className={`rounded-full border px-2 py-0.5 font-mono text-[10px] ${statusClass(article.status)}`}>
+          <span className={`rounded-full border px-2 py-0.5 etiqueta ${statusClass(article.status)}`}>
             {article.status}
           </span>
           {article.quality_score !== null && (
-            <span className={`rounded-full border px-2 py-0.5 font-mono text-[10px] ${scoreClass(article.quality_score)}`}>
+            <span className={`rounded-full border px-2 py-0.5 etiqueta ${scoreClass(article.quality_score)}`}>
               calidad {article.quality_score}/100
             </span>
           )}
-          <span className="font-mono text-[11px] text-fg-faint">{article.views} vistas</span>
+          <span className="meta text-fg-faint">{article.views} vistas</span>
         </div>
 
         {article.quality_notes && (
@@ -147,7 +147,7 @@ export default async function EditArticlePage({
           <div className="flex flex-wrap gap-3 pt-2">
             <button
               type="submit"
-              className="rounded-lg border border-line px-4 py-2.5 text-sm transition-colors hover:border-accent hover:text-accent"
+              className="border border-line px-4 py-2.5 text-sm transition-colors hover:border-accent hover:text-accent"
             >
               Guardar
             </button>
@@ -155,7 +155,7 @@ export default async function EditArticlePage({
               type="submit"
               name="publish"
               value="1"
-              className="rounded-lg border border-accent bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg transition-opacity hover:opacity-85"
+              className="border border-accent bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg transition-opacity hover:opacity-85"
             >
               Guardar y publicar
             </button>
@@ -163,7 +163,7 @@ export default async function EditArticlePage({
         </form>
 
         <div>
-          <h2 className="mb-4 font-mono text-[11px] uppercase tracking-widest text-fg-faint">
+          <h2 className="mb-4 etiqueta text-fg-faint">
             <span className="text-accent">##</span> Vista previa
           </h2>
           <h1 className="text-2xl leading-tight font-bold tracking-tight">{article.title}</h1>
@@ -175,7 +175,7 @@ export default async function EditArticlePage({
 
           <form action={deleteArticleAction} className="mt-8">
             <input type="hidden" name="id" value={article.id} />
-            <button className="rounded-lg border border-line px-4 py-2 text-[13px] text-danger transition-colors hover:border-danger">
+            <button className="border border-line px-4 py-2 text-[13px] text-danger transition-colors hover:border-danger">
               Eliminar definitivamente
             </button>
           </form>

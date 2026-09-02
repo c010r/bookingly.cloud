@@ -7,8 +7,8 @@ import { addSourceAction, removeSourceAction, toggleSourceAction } from "../acti
 export const dynamic = "force-dynamic";
 
 const CAMPO =
-  "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-[14px] outline-none focus:border-accent";
-const ETIQUETA = "mb-1.5 block font-mono text-[11px] uppercase tracking-widest text-fg-faint";
+  "w-full border border-line bg-surface px-3 py-2.5 text-[14px] outline-none focus:border-accent";
+const ETIQUETA = "mb-1.5 block etiqueta text-fg-faint";
 
 export default async function SourcesPage() {
   if (!(await isAuthenticated())) redirect("/admin/login");
@@ -44,14 +44,14 @@ export default async function SourcesPage() {
         </div>
         <button
           type="submit"
-          className="rounded-lg border border-accent bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg transition-opacity hover:opacity-85"
+          className="border border-accent bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg transition-opacity hover:opacity-85"
         >
           Anadir
         </button>
       </form>
 
       {sources.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-line-strong p-16 text-center font-mono text-sm text-fg-faint">
+        <div className="border border-dashed border-line-strong p-16 text-center meta text-fg-faint">
           No hay fuentes. Ejecuta <code className="text-accent">npm run db:seed</code>.
         </div>
       ) : (
@@ -62,7 +62,7 @@ export default async function SourcesPage() {
                 <h3 className="flex flex-wrap items-center gap-2 text-[15px] font-semibold">
                   {s.name}
                   <span
-                    className={`rounded-full border px-2 py-0.5 font-mono text-[10px] ${
+                    className={`rounded-full border px-2 py-0.5 etiqueta ${
                       s.active
                         ? "border-accent/50 bg-accent/10 text-accent"
                         : "border-line bg-surface-2 text-fg-faint"
@@ -71,20 +71,20 @@ export default async function SourcesPage() {
                     {s.active ? "activa" : "pausada"}
                   </span>
                 </h3>
-                <p className="mt-1 truncate font-mono text-[11.5px] text-fg-faint">
+                <p className="mt-1 truncate meta text-fg-faint">
                   {s.feed_url} · {s.lang} · {s.article_count} articulos
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">
                 <form action={toggleSourceAction}>
                   <input type="hidden" name="id" value={s.id} />
-                  <button className="rounded-lg border border-line px-3.5 py-2 text-[13px] transition-colors hover:border-accent hover:text-accent">
+                  <button className="border border-line px-3.5 py-2 text-[13px] transition-colors hover:border-accent hover:text-accent">
                     {s.active ? "Pausar" : "Activar"}
                   </button>
                 </form>
                 <form action={removeSourceAction}>
                   <input type="hidden" name="id" value={s.id} />
-                  <button className="rounded-lg border border-line px-3.5 py-2 text-[13px] text-danger transition-colors hover:border-danger">
+                  <button className="border border-line px-3.5 py-2 text-[13px] text-danger transition-colors hover:border-danger">
                     Borrar
                   </button>
                 </form>

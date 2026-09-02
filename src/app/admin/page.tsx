@@ -36,16 +36,16 @@ export default async function AdminPage({
       <AdminBar title={`Redaccion · ${ETIQUETAS[status]}`} />
 
       {ok && (
-        <p className="mb-5 rounded-lg border border-accent/50 bg-accent/10 px-4 py-3 text-sm text-accent">
+        <p className="mb-5 border border-accent/50 bg-accent/10 px-4 py-3 text-sm text-accent">
           {decodeURIComponent(ok)}
         </p>
       )}
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
         {(["draft", "published", "rejected"] as const).map((s) => (
-          <div key={s} className="min-w-28 rounded-xl border border-line bg-surface px-5 py-3.5">
-            <div className="font-mono text-2xl font-semibold tabular-nums">{counts[s] ?? 0}</div>
-            <div className="font-mono text-[10.5px] uppercase tracking-widest text-fg-faint">
+          <div key={s} className="min-w-28 border border-line bg-surface px-5 py-3.5">
+            <div className="text-2xl font-extrabold tabular-nums">{counts[s] ?? 0}</div>
+            <div className="etiqueta text-fg-faint">
               {ETIQUETAS[s]}
             </div>
           </div>
@@ -54,7 +54,7 @@ export default async function AdminPage({
       </div>
 
       {runs[0] && (
-        <p className="mb-6 font-mono text-xs text-fg-faint">
+        <p className="mb-6 meta text-fg-faint">
           Ultima ingesta:{" "}
           {runs[0].finished_at
             ? `${runs[0].created} nuevos · ${runs[0].published} publicados · ${runs[0].duplicates} repetidos · ${runs[0].skipped} ya conocidos · ${runs[0].failed} fallos`
@@ -63,7 +63,7 @@ export default async function AdminPage({
       )}
 
       {articles.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-line-strong p-16 text-center font-mono text-sm text-fg-faint">
+        <div className="border border-dashed border-line-strong p-16 text-center meta text-fg-faint">
           No hay articulos en este estado.
         </div>
       ) : (
@@ -76,19 +76,19 @@ export default async function AdminPage({
                     {a.title}
                   </Link>
                   <span
-                    className={`rounded-full border px-2 py-0.5 font-mono text-[10px] ${statusClass(a.status)}`}
+                    className={`rounded-full border px-2 py-0.5 etiqueta ${statusClass(a.status)}`}
                   >
                     {a.status}
                   </span>
                   {a.quality_score !== null && (
                     <span
-                      className={`rounded-full border px-2 py-0.5 font-mono text-[10px] ${scoreClass(a.quality_score)}`}
+                      className={`rounded-full border px-2 py-0.5 etiqueta ${scoreClass(a.quality_score)}`}
                     >
                       {a.quality_score}
                     </span>
                   )}
                   {a.auto_published && (
-                    <span className="rounded-full border border-line px-2 py-0.5 font-mono text-[10px] text-fg-faint">
+                    <span className="rounded-full border border-line px-2 py-0.5 etiqueta text-fg-faint">
                       auto
                     </span>
                   )}
@@ -98,7 +98,7 @@ export default async function AdminPage({
                   {a.dek || excerpt(a.body_md, 150)}
                 </p>
 
-                <div className="font-mono text-[11.5px] text-fg-faint">
+                <div className="meta text-fg-faint">
                   {categoryName(a.category)} · {a.source_name}
                   {a.extra_sources.length > 0 && ` (+${a.extra_sources.length})`} ·{" "}
                   {a.views} vistas ·{" "}
@@ -116,7 +116,7 @@ export default async function AdminPage({
               <div className="flex shrink-0 flex-wrap gap-2">
                 <Link
                   href={`/admin/articulo/${a.id}`}
-                  className="rounded-lg border border-line px-3.5 py-2 text-[13px] transition-colors hover:border-accent hover:text-accent"
+                  className="border border-line px-3.5 py-2 text-[13px] transition-colors hover:border-accent hover:text-accent"
                 >
                   Editar
                 </Link>
@@ -124,7 +124,7 @@ export default async function AdminPage({
                   <form action={setStatusAction}>
                     <input type="hidden" name="id" value={a.id} />
                     <input type="hidden" name="status" value="published" />
-                    <button className="rounded-lg border border-accent bg-accent px-3.5 py-2 text-[13px] font-semibold text-accent-fg transition-opacity hover:opacity-85">
+                    <button className="border border-accent bg-accent px-3.5 py-2 text-[13px] font-semibold text-accent-fg transition-opacity hover:opacity-85">
                       Publicar
                     </button>
                   </form>
@@ -133,7 +133,7 @@ export default async function AdminPage({
                   <form action={setStatusAction}>
                     <input type="hidden" name="id" value={a.id} />
                     <input type="hidden" name="status" value="draft" />
-                    <button className="rounded-lg border border-line px-3.5 py-2 text-[13px] transition-colors hover:border-fg-muted">
+                    <button className="border border-line px-3.5 py-2 text-[13px] transition-colors hover:border-fg-muted">
                       Despublicar
                     </button>
                   </form>
@@ -142,7 +142,7 @@ export default async function AdminPage({
                   <form action={setStatusAction}>
                     <input type="hidden" name="id" value={a.id} />
                     <input type="hidden" name="status" value="rejected" />
-                    <button className="rounded-lg border border-line px-3.5 py-2 text-[13px] text-danger transition-colors hover:border-danger">
+                    <button className="border border-line px-3.5 py-2 text-[13px] text-danger transition-colors hover:border-danger">
                       Descartar
                     </button>
                   </form>
