@@ -315,7 +315,7 @@
      acento para que ninguno se confunda con el color de la marca. */
   .portada-generica[data-seccion="hardware"] { --tinta-seccion: #8f6321; }
   .portada-generica[data-seccion="negocios"] { --tinta-seccion: #6e7127; }
-  .portada-generica[data-seccion="apps"] { --tinta-seccion: #12805a; }
+  .portada-generica[data-seccion="infraestructura"] { --tinta-seccion: #12805a; }
   .portada-generica[data-seccion="software"] { --tinta-seccion: #177d7d; }
   .portada-generica[data-seccion="internet"] { --tinta-seccion: #1f6f9e; }
   .portada-generica[data-seccion="ciberseguridad"] { --tinta-seccion: #3a62a8; }

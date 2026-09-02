@@ -47,16 +47,16 @@ const MOTIVOS: Record<CategorySlug, React.ReactNode> = {
       <path d="M136 112 h20 M166 112 h34" />
     </>
   ),
-  // Telefono con rejilla de iconos.
-  apps: (
+  // Bastidor de servidores apilados.
+  infraestructura: (
     <>
-      <rect x="122" y="34" width="76" height="132" rx="10" />
-      <path d="M148 46 h24" />
-      <rect x="136" y="66" width="20" height="20" />
-      <rect x="164" y="66" width="20" height="20" />
-      <rect x="136" y="94" width="20" height="20" />
-      <rect x="164" y="94" width="20" height="20" />
-      <path d="M144 140 h32" />
+      <rect x="106" y="44" width="108" height="32" />
+      <rect x="106" y="86" width="108" height="32" />
+      <rect x="106" y="128" width="108" height="32" />
+      <path d="M122 60 h10 M122 102 h10 M122 144 h10" />
+      <circle cx="196" cy="60" r="4" />
+      <circle cx="196" cy="102" r="4" />
+      <circle cx="196" cy="144" r="4" />
     </>
   ),
   // Chip con sus patillas.
