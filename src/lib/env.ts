@@ -1,3 +1,19 @@
+/** Un modelo de la lista, con el esfuerzo de razonamiento que admite. */
+export type ModeloLlm = { nombre: string; esfuerzo?: string };
+
+/**
+ * "openai/gpt-oss-120b:low" -> { nombre, esfuerzo }. Los nombres de modelo
+ * llevan barras pero nunca dos puntos, asi que el separador no es ambiguo.
+ */
+function parsearModelo(entrada: string): ModeloLlm {
+  const corte = entrada.indexOf(":");
+  if (corte === -1) return { nombre: entrada };
+  return {
+    nombre: entrada.slice(0, corte).trim(),
+    esfuerzo: entrada.slice(corte + 1).trim() || undefined,
+  };
+}
+
 function required(name: string): string {
   const v = process.env[name];
   if (!v) throw new Error(`Falta la variable de entorno ${name}`);
@@ -31,20 +47,26 @@ export const env = {
    * Lista de modelos por orden de preferencia, separados por comas. Cada uno
    * tiene su propio cupo diario, asi que rotar entre varios multiplica lo que
    * cabe en un dia; el cliente pasa al siguiente cuando uno se agota.
+   *
+   * Cada entrada admite un sufijo ":esfuerzo" con el reasoning_effort que se
+   * le manda. Va por modelo porque no coinciden: los gpt-oss aceptan
+   * low/medium/high y los qwen solo none/default. Sin sufijo no se manda nada.
    */
-  get llmModels(): string[] {
+  get llmModels(): ModeloLlm[] {
     const crudo = this.usaConfigAntigua
       ? process.env.DEEPSEEK_MODEL || "deepseek-chat"
-      : process.env.LLM_MODEL || "openai/gpt-oss-120b";
+      : process.env.LLM_MODEL || "openai/gpt-oss-120b:low";
     const lista = crudo
       .split(",")
       .map((m) => m.trim())
-      .filter(Boolean);
-    return lista.length > 0 ? lista : ["openai/gpt-oss-120b"];
+      .filter(Boolean)
+      .map(parsearModelo)
+      .filter((m) => m.nombre);
+    return lista.length > 0 ? lista : [{ nombre: "openai/gpt-oss-120b", esfuerzo: "low" }];
   },
   /** El preferido. Solo para mostrarlo; quien escribe cada pieza lo dice chat(). */
   get llmModel() {
-    return this.llmModels[0];
+    return this.llmModels[0].nombre;
   },
   /**
    * Tokens por minuto que admite el proveedor. Es el limite que aprieta en las

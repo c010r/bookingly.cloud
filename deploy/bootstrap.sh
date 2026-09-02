@@ -99,7 +99,7 @@ PGSSL=0
 
 LLM_API_KEY=${LLM_API_KEY:-PENDIENTE_PON_TU_CLAVE}
 LLM_BASE_URL=${LLM_BASE_URL:-https://api.groq.com/openai/v1}
-LLM_MODEL=${LLM_MODEL:-openai/gpt-oss-120b,openai/gpt-oss-20b,qwen/qwen3.8-27b,qwen/qwen3.6-27b}
+LLM_MODEL=${LLM_MODEL:-openai/gpt-oss-120b:low,openai/gpt-oss-20b:low,qwen/qwen3.8-27b:none,qwen/qwen3.6-27b:none}
 LLM_TOKENS_PER_MINUTE=${LLM_TOKENS_PER_MINUTE:-8000}
 LLM_MAX_SOURCE_CHARS=${LLM_MAX_SOURCE_CHARS:-6000}
 
@@ -144,7 +144,7 @@ else
 LLM_API_KEY=%s
 LLM_BASE_URL=%s
 LLM_MODEL=%s
-'         "${LLM_API_KEY}"         "${LLM_BASE_URL:-https://api.groq.com/openai/v1}"         "${LLM_MODEL:-openai/gpt-oss-120b,openai/gpt-oss-20b,qwen/qwen3.8-27b,qwen/qwen3.6-27b}" >> "$ENV_FILE"
+'         "${LLM_API_KEY}"         "${LLM_BASE_URL:-https://api.groq.com/openai/v1}"         "${LLM_MODEL:-openai/gpt-oss-120b:low,openai/gpt-oss-20b:low,qwen/qwen3.8-27b:none,qwen/qwen3.6-27b:none}" >> "$ENV_FILE"
     fi
     echo "Clave del modelo actualizada."
   fi

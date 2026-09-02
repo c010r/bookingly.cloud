@@ -1,4 +1,4 @@
-import { env } from "./env";
+import { env, type ModeloLlm } from "./env";
 import { query } from "./db";
 
 type Message = { role: "system" | "user" | "assistant"; content: string };
@@ -37,11 +37,11 @@ export class LlmError extends Error {
  */
 export async function chat(opts: ChatOptions): Promise<ChatResult> {
   const enPausa = await modelosEnPausa();
-  const candidatos = env.llmModels.filter((m) => !enPausa.has(m));
+  const candidatos = env.llmModels.filter((m) => !enPausa.has(m.nombre));
 
   if (candidatos.length === 0) {
     throw new LlmError(
-      `Sin modelos disponibles: ${env.llmModels.join(", ")} agotaron su cupo diario`,
+      `Sin modelos disponibles: ${env.llmModels.map((m) => m.nombre).join(", ")} agotaron su cupo diario`,
       429
     );
   }
@@ -49,31 +49,35 @@ export async function chat(opts: ChatOptions): Promise<ChatResult> {
   let ultimoError: unknown;
   for (const modelo of candidatos) {
     try {
-      return { content: await llamar(modelo, opts), model: modelo };
+      return { content: await llamar(modelo, opts), model: modelo.nombre };
     } catch (err) {
       if (!(err instanceof LlmError) || !motivoDePausa(err)) throw err;
-      await pausar(modelo, err);
+      await pausar(modelo.nombre, err);
       ultimoError = err;
     }
   }
   throw ultimoError;
 }
 
-async function llamar(modelo: string, opts: ChatOptions): Promise<string> {
+async function llamar(modelo: ModeloLlm, opts: ChatOptions): Promise<string> {
   const body = {
-    model: modelo,
+    model: modelo.nombre,
     messages: opts.messages,
     temperature: opts.temperature ?? 0.7,
     max_tokens: opts.maxTokens ?? 4000,
     stream: false,
     ...(opts.json ? { response_format: { type: "json_object" } } : {}),
+    // Sin bajarlo, un modelo que razona se gasta el cupo de salida pensando y
+    // devuelve el contenido vacio: el proveedor responde json_validate_failed
+    // con failed_generation en blanco. Ademas dispara el gasto de tokens.
+    ...(modelo.esfuerzo ? { reasoning_effort: modelo.esfuerzo } : {}),
   };
 
   const estimado = estimarCoste(
     opts.messages.reduce((n, m) => n + m.content.length, 0),
     body.max_tokens
   );
-  await esperarCupo(modelo, estimado);
+  await esperarCupo(modelo.nombre, estimado);
 
   const res = await fetchWithRetry(`${env.llmBaseUrl}/chat/completions`, {
     method: "POST",
@@ -90,7 +94,7 @@ async function llamar(modelo: string, opts: ChatOptions): Promise<string> {
     usage?: { total_tokens?: number };
   };
   // Apuntamos lo que ha costado de verdad; es lo que regula el ritmo.
-  anotarConsumo(modelo, data.usage?.total_tokens ?? estimado);
+  anotarConsumo(modelo.nombre, data.usage?.total_tokens ?? estimado);
   const content = data.choices?.[0]?.message?.content;
   if (!content) throw new LlmError("El modelo devolvio una respuesta vacia");
   return content;

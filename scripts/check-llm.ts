@@ -19,7 +19,8 @@ try {
 }
 
 console.log(`Proveedor: ${env.llmBaseUrl}`);
-console.log(`Modelos:   ${env.llmModels.join(", ")}`);
+const listado = env.llmModels.map((m) => (m.esfuerzo ? `${m.nombre}:${m.esfuerzo}` : m.nombre));
+console.log(`Modelos:   ${listado.join(", ")}`);
 console.log(`Clave:     ${clave.slice(0, 6)}…${clave.slice(-4)}`);
 
 // Que modelos estan en pausa ahora mismo y hasta cuando.
