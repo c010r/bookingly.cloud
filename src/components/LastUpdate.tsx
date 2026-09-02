@@ -17,7 +17,7 @@ export default async function LastUpdate() {
 
   return (
     <span className="inline-flex items-center gap-2">
-      <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-neon" />
+      <span aria-hidden="true" className="inline-block h-2 w-2 shrink-0 bg-accent" />
       <span>
         Ultima actualizacion:{" "}
         <time dateTime={ultima.toISOString()}>{formatUtc(ultima)}</time>

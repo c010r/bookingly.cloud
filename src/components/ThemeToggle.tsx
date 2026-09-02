@@ -25,7 +25,7 @@ export default function ThemeToggle() {
       onClick={toggle}
       aria-label="Cambiar entre tema claro y oscuro"
       title="Cambiar tema"
-      className="grid h-9 w-9 place-items-center rounded-full border border-line bg-surface text-fg-muted transition-all hover:border-neon hover:text-neon hover:shadow-[0_0_18px_-4px_var(--neon)]"
+      className="grid h-9 w-9 place-items-center border-2 border-fg bg-bg text-fg transition-colors hover:bg-accent hover:border-accent hover:text-accent-fg"
     >
       {/* Los dos iconos van en el DOM y el CSS elige: asi sale el correcto
           antes de que React hidrate, sin parpadeo ni desajuste. */}

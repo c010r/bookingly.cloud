@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import ArticleCard from "@/components/ArticleCard";
-import SectionTitle from "@/components/SectionTitle";
+import ArticleGrid from "@/components/ArticleGrid";
 import { getByCategory } from "@/lib/repo";
-import { categoryName, isCategory } from "@/lib/categories";
+import { CATEGORIES, categoryName, isCategory } from "@/lib/categories";
 
 export const dynamic = "force-dynamic";
 
@@ -21,21 +20,33 @@ export default async function CategoryPage({ params }: Params) {
   if (!isCategory(slug)) notFound();
 
   const articles = await getByCategory(slug);
+  const seccion = CATEGORIES.find((c) => c.slug === slug);
 
   return (
-    <>
-      <SectionTitle>{categoryName(slug)}</SectionTitle>
+    <div className="contenedor">
+      {/* Cabecera de seccion: el nombre a cuerpo de cartel abre la pagina. */}
+      <header className="border-b-2 border-fg py-12 lg:py-16">
+        <p className="etiqueta text-accent">Seccion</p>
+        <h1 className="titular-xl mt-3">{categoryName(slug)}</h1>
+        {seccion && (
+          <p className="entradilla mt-4 max-w-2xl text-lg text-fg-muted first-letter:uppercase">
+            {seccion.hint}.
+          </p>
+        )}
+        <p className="meta mt-6 text-fg-faint">
+          {articles.length === 1 ? "1 noticia" : `${articles.length} noticias`}
+        </p>
+      </header>
+
       {articles.length === 0 ? (
-        <div className="my-12 rounded-xl border border-dashed border-line-strong p-16 text-center font-mono text-sm text-fg-faint">
-          Todavia no hay noticias publicadas en esta seccion.
+        <div className="my-24 border-b-2 border-fg pb-20 text-center">
+          <p className="titular-l">Todavia no hay noticias en esta seccion.</p>
         </div>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {articles.map((a, i) => (
-            <ArticleCard key={a.id} article={a} index={i} />
-          ))}
+        <div className="mt-12">
+          <ArticleGrid articulos={articles} />
         </div>
       )}
-    </>
+    </div>
   );
 }

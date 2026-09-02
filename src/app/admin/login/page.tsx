@@ -12,7 +12,7 @@ export default function LoginPage() {
       className="mx-auto mt-[14vh] max-w-sm rounded-xl border border-line bg-surface p-8"
     >
       <h2 className="mb-5 font-mono text-lg font-semibold">
-        <span className="text-neon">$</span> acceso a la redaccion
+        <span className="text-accent">$</span> acceso a la redaccion
       </h2>
 
       {error && (
@@ -33,13 +33,13 @@ export default function LoginPage() {
         type="password"
         autoFocus
         required
-        className="mb-5 w-full rounded-lg border border-line bg-bg px-3 py-2.5 outline-none focus:border-neon"
+        className="mb-5 w-full rounded-lg border border-line bg-bg px-3 py-2.5 outline-none focus:border-accent"
       />
 
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-lg border border-neon bg-neon py-2.5 text-sm font-semibold text-bg transition-opacity hover:opacity-85 disabled:opacity-50"
+        className="w-full rounded-lg border border-accent bg-accent py-2.5 text-sm font-semibold text-accent-fg transition-opacity hover:opacity-85 disabled:opacity-50"
       >
         {pending ? "Comprobando..." : "Entrar"}
       </button>

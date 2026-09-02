@@ -15,16 +15,19 @@ export default async function SiteNav() {
   if (activas.length === 0) return null;
 
   return (
-    <div className="border-b border-line bg-bg-soft/60">
-      <nav className="mx-auto flex max-w-6xl items-center gap-6 overflow-x-auto px-5 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="border-b border-line bg-bg">
+      <nav
+        aria-label="Secciones"
+        className="contenedor flex items-stretch gap-7 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {activas.map((c) => (
           <Link
             key={c.slug}
             href={`/categoria/${c.slug}`}
-            className="group flex shrink-0 items-center gap-1.5 font-mono text-[12px] whitespace-nowrap text-fg-muted transition-colors hover:text-neon"
+            className="etiqueta group flex shrink-0 items-baseline gap-1.5 border-b-2 border-transparent py-3.5 whitespace-nowrap text-fg-muted transition-colors hover:border-accent hover:text-fg"
           >
             {c.name}
-            <span className="text-[10px] text-fg-faint tabular-nums transition-colors group-hover:text-neon">
+            <span className="text-[0.625rem] font-medium tracking-normal text-fg-faint tabular-nums">
               {counts[c.slug]}
             </span>
           </Link>

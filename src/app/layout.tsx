@@ -1,11 +1,29 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { Archivo, Newsreader } from "next/font/google";
 import SiteNav from "@/components/SiteNav";
 import ThemeToggle from "@/components/ThemeToggle";
 import LastUpdate from "@/components/LastUpdate";
 import { env } from "@/lib/env";
 import "./globals.css";
+
+/**
+ * Dos familias y ninguna mas. Archivo es una grotesca de asta ancha que
+ * aguanta el peso 900 a tamano de cartel; Newsreader es una serif de prensa
+ * para el cuerpo del texto y las entradillas.
+ */
+const archivo = Archivo({
+  subsets: ["latin"],
+  variable: "--fuente-titular",
+  display: "swap",
+});
+
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  variable: "--fuente-texto",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.siteUrl),
@@ -32,48 +50,61 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH }} />
       </head>
-      <body className="techno-grid techno-glow min-h-screen">
-        <div className="relative z-10">
-          <header className="sticky top-0 z-30 border-b border-line bg-bg/80 backdrop-blur-xl backdrop-saturate-150">
-            <div className="mx-auto flex h-[66px] max-w-6xl items-center justify-between gap-5 px-5">
+      <body className={`${archivo.variable} ${newsreader.variable} min-h-screen`}>
+        {/* Cabecera: filete grueso abajo, como la mancheta de un semanario. */}
+        <header className="sticky top-0 z-40 border-b-2 border-fg bg-bg">
+          <div className="contenedor flex h-16 items-center justify-between gap-4">
+            <Link
+              href="/"
+              className="flex items-baseline gap-2"
+              aria-label={`${env.siteName}, portada`}
+            >
+              <span className="font-display text-[1.6rem] leading-none font-black tracking-[-0.055em]">
+                c<span className="text-accent">010</span>r
+              </span>
+              <span className="etiqueta text-fg-faint">News</span>
+            </Link>
+
+            <nav className="flex items-center gap-5">
               <Link
                 href="/"
-                className="glitch font-mono text-xl font-bold tracking-tight"
-                aria-label={`${env.siteName}, portada`}
+                className="etiqueta text-fg-muted transition-colors hover:text-accent"
               >
-                c<span className="text-neon">010</span>r
-                <span className="ml-0.5 font-medium text-fg-faint">News</span>
+                Portada
               </Link>
+              <ThemeToggle />
+            </nav>
+          </div>
+        </header>
 
-              <nav className="flex items-center gap-5">
-                <Link
-                  href="/"
-                  className="text-sm text-fg-muted transition-colors hover:text-fg"
-                >
-                  Portada
-                </Link>
-                <ThemeToggle />
-              </nav>
+        <Suspense fallback={null}>
+          <SiteNav />
+        </Suspense>
+
+        <main>{children}</main>
+
+        <footer className="mt-24 border-t-2 border-fg bg-bg">
+          <div className="contenedor flex flex-col gap-8 py-12 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="font-display text-[2.6rem] leading-[0.85] font-black tracking-[-0.055em]">
+                c<span className="text-accent">010</span>r
+                <span className="text-fg-faint">News</span>
+              </p>
+              <p className="entradilla mt-3 max-w-sm text-[0.9rem] text-fg-muted">
+                {env.siteDescription}
+              </p>
             </div>
-          </header>
 
-          <Suspense fallback={null}>
-            <SiteNav />
-          </Suspense>
-
-          <main className="mx-auto max-w-6xl px-5">{children}</main>
-
-          <footer className="mt-20 border-t border-line bg-bg-soft py-9">
-            <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 font-mono text-xs text-fg-faint">
-              <span>
-                © {new Date().getFullYear()} {env.siteName}
-              </span>
+            <div className="meta flex flex-col gap-2 text-fg-faint sm:items-end">
               <Suspense fallback={null}>
                 <LastUpdate />
               </Suspense>
+              <span>
+                © {new Date().getFullYear()} {env.siteName}
+              </span>
             </div>
-          </footer>
-        </div>
+          </div>
+        </footer>
       </body>
     </html>
   );

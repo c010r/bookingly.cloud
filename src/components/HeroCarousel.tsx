@@ -1,18 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Article } from "@/lib/repo";
 import { categoryName } from "@/lib/categories";
-import { formatDate, formatViews } from "@/lib/format";
+import { formatDate, formatViews, isoDate } from "@/lib/format";
+import PortadaGenerica from "./PortadaGenerica";
 
 const INTERVALO = 7000;
 
+/**
+ * Apertura de portada. Cada diapositiva ocupa el ancho de la ventana: el
+ * titular a la izquierda, alineado con el canalon del contenedor, y la imagen
+ * a sangre por la derecha.
+ */
 export default function HeroCarousel({ articulos }: { articulos: Article[] }) {
   const [actual, setActual] = useState(0);
   const [pausado, setPausado] = useState(false);
   const total = articulos.length;
-  const contenedor = useRef<HTMLDivElement>(null);
 
   const ir = useCallback(
     (i: number) => setActual(((i % total) + total) % total),
@@ -29,16 +34,20 @@ export default function HeroCarousel({ articulos }: { articulos: Article[] }) {
   }, [pausado, total]);
 
   function teclas(e: React.KeyboardEvent) {
-    if (e.key === "ArrowLeft") { e.preventDefault(); ir(actual - 1); }
-    if (e.key === "ArrowRight") { e.preventDefault(); ir(actual + 1); }
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      ir(actual - 1);
+    }
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      ir(actual + 1);
+    }
   }
 
   if (total === 0) return null;
 
   return (
     <div
-      ref={contenedor}
-      className="group/car relative overflow-hidden"
       onMouseEnter={() => setPausado(true)}
       onMouseLeave={() => setPausado(false)}
       onFocusCapture={() => setPausado(true)}
@@ -47,123 +56,155 @@ export default function HeroCarousel({ articulos }: { articulos: Article[] }) {
       role="region"
       aria-roledescription="carrusel"
       aria-label="Noticias destacadas"
-      tabIndex={0}
     >
-      <div className="scanline" aria-hidden="true" />
-
-      {/* Pista: se desplaza en horizontal, un panel por noticia. */}
-      <div
-        className="flex transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
-        style={{ transform: `translateX(-${actual * 100}%)` }}
-      >
-        {articulos.map((a, i) => (
-          <article
-            key={a.id}
-            className="w-full shrink-0 p-6 sm:p-8 lg:p-10"
-            aria-hidden={i !== actual}
-            aria-roledescription="diapositiva"
-            aria-label={`${i + 1} de ${total}`}
-          >
-            <Link
-              href={`/noticia/${a.slug}`}
-              className="group block"
-              tabIndex={i === actual ? 0 : -1}
+      {/* Pista: se desplaza en horizontal, una diapositiva por noticia. */}
+      <div className="overflow-hidden">
+        <div
+          className="flex transition-transform duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+          style={{ transform: `translateX(-${actual * 100}%)` }}
+        >
+          {articulos.map((a, i) => (
+            <article
+              key={a.id}
+              className="grupo-pieza group w-full min-w-0 shrink-0"
+              aria-hidden={i !== actual}
+              aria-roledescription="diapositiva"
+              aria-label={`${i + 1} de ${total}`}
             >
-              {a.image_url && (
-                <div className="mb-6 overflow-hidden rounded-xl border border-line">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={a.image_url}
-                    alt=""
-                    className="aspect-[16/9] w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-                  />
+              <Link
+                href={`/noticia/${a.slug}`}
+                className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.02fr)]"
+                tabIndex={i === actual ? 0 : -1}
+              >
+                {/* Imagen: banda a sangre arriba en movil, columna derecha
+                    de altura completa a partir de lg. */}
+                <div className="relative order-1 h-[62vw] max-h-[24rem] min-h-[13rem] overflow-hidden bg-surface-2 lg:order-2 lg:h-auto lg:max-h-none lg:min-h-[33rem]">
+                  {a.image_url ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      // Varios CDN devuelven 403 si el referer es otro dominio; sin el sirven igual.
+                      referrerPolicy="no-referrer"
+                      src={a.image_url}
+                      alt=""
+                      loading={i === 0 ? "eager" : "lazy"}
+                      fetchPriority={i === 0 ? "high" : "auto"}
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                    />
+                  ) : (
+                    <PortadaGenerica
+                      categoria={a.category}
+                      className="absolute inset-0"
+                      grosor={3}
+                    />
+                  )}
                 </div>
-              )}
 
-              <div className="mb-3 flex flex-wrap items-center gap-3 font-mono text-[11px] uppercase tracking-[0.14em]">
-                <span className="inline-flex items-center gap-1.5 text-neon">
-                  <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-neon" />
-                  En portada
-                </span>
-                <span className="text-fg-faint">/</span>
-                <span className="text-fg-faint">{categoryName(a.category)}</span>
-              </div>
+                <div className="canalon-inicio order-2 flex min-w-0 flex-col justify-center py-8 pr-5 lg:order-1 lg:py-14 lg:pr-14">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="etiqueta bg-accent px-2 py-1 text-accent-fg">
+                      En portada
+                    </span>
+                    <span className="etiqueta text-fg-muted">
+                      {categoryName(a.category)}
+                    </span>
+                  </div>
 
-              <h2 className="text-2xl leading-[1.14] font-bold tracking-tight text-balance transition-colors group-hover:text-neon sm:text-3xl lg:text-[2.4rem]">
-                {a.title}
-              </h2>
+                  <h2 className="enlace-titular titular-xxl mt-5">{a.title}</h2>
 
-              <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-fg-muted sm:text-base">
-                {a.dek}
-              </p>
+                  {a.dek && (
+                    <p className="entradilla mt-5 max-w-xl text-lg text-fg-muted sm:text-xl">
+                      {a.dek}
+                    </p>
+                  )}
 
-              <div className="mt-6 flex flex-wrap items-center gap-2.5 font-mono text-[11.5px] text-fg-faint">
-                <time>{formatDate(a.published_at)}</time>
-                <span className="opacity-40">·</span>
-                <span>{a.reading_minutes} min</span>
-                <span className="opacity-40">·</span>
-                <span>{a.source_name}</span>
-                <span className="opacity-40">·</span>
-                <span>{formatViews(a.views)}</span>
-              </div>
-            </Link>
-          </article>
-        ))}
+                  <div className="meta mt-7 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-fg-faint">
+                    <time dateTime={isoDate(a.published_at)}>
+                      {formatDate(a.published_at)}
+                    </time>
+                    <span aria-hidden="true" className="text-fg-faint/50">
+                      /
+                    </span>
+                    <span>{a.reading_minutes} min</span>
+                    <span aria-hidden="true" className="text-fg-faint/50">
+                      /
+                    </span>
+                    <span>
+                      {a.extra_sources?.length
+                        ? `${a.extra_sources.length + 1} fuentes`
+                        : a.source_name}
+                    </span>
+                    <span aria-hidden="true" className="text-fg-faint/50">
+                      /
+                    </span>
+                    <span>{formatViews(a.views)}</span>
+                  </div>
+                </div>
+              </Link>
+            </article>
+          ))}
+        </div>
       </div>
 
       {total > 1 && (
-        <>
-          {/* Flechas: aparecen al acercar el raton, siempre alcanzables con teclado. */}
-          <button
-            type="button"
-            onClick={() => ir(actual - 1)}
-            aria-label="Noticia anterior"
-            className="absolute top-1/2 left-3 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-line bg-bg/80 text-fg-muted opacity-0 backdrop-blur transition-all hover:border-neon hover:text-neon focus-visible:opacity-100 group-hover/car:opacity-100"
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            onClick={() => ir(actual + 1)}
-            aria-label="Noticia siguiente"
-            className="absolute top-1/2 right-3 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-line bg-bg/80 text-fg-muted opacity-0 backdrop-blur transition-all hover:border-neon hover:text-neon focus-visible:opacity-100 group-hover/car:opacity-100"
-          >
-            ›
-          </button>
-
-          {/* Indicadores: la barra se llena mientras dura la diapositiva. */}
-          <div className="absolute bottom-4 left-6 flex items-center gap-2 sm:left-8 lg:left-10">
-            {articulos.map((a, i) => (
-              <button
-                key={a.id}
-                type="button"
-                onClick={() => ir(i)}
-                aria-label={`Ir a la noticia ${i + 1}`}
-                aria-current={i === actual}
-                className="group/dot h-1.5 rounded-full transition-all"
-                style={{ width: i === actual ? 34 : 14 }}
-              >
-                <span
-                  className={`block h-full w-full overflow-hidden rounded-full ${
-                    i === actual ? "bg-line-strong" : "bg-line hover:bg-line-strong"
-                  }`}
+        <div className="border-t border-line">
+          <div className="canalon-inicio flex items-center gap-3 pr-5 lg:pr-10">
+            {/* Sumario numerado: 01 a 05, con la barra de avance de la activa. */}
+            <div className="flex flex-1 items-end gap-2 py-3 sm:gap-4">
+              {articulos.map((a, i) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => ir(i)}
+                  aria-label={`Ir a la noticia ${i + 1}: ${a.title}`}
+                  aria-current={i === actual}
+                  className="group/n w-full max-w-[6.5rem] flex-1 text-left"
                 >
-                  {i === actual && (
-                    <span
-                      key={`${actual}-${pausado}`}
-                      className="block h-full w-full origin-left rounded-full bg-neon motion-reduce:animate-none"
-                      style={{
-                        animation: pausado
-                          ? "none"
-                          : `llenar ${INTERVALO}ms linear forwards`,
-                      }}
-                    />
-                  )}
-                </span>
+                  <span
+                    className={`meta block font-bold transition-colors ${
+                      i === actual
+                        ? "text-accent"
+                        : "text-fg-faint group-hover/n:text-fg"
+                    }`}
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="mt-1.5 block h-[3px] w-full overflow-hidden bg-line">
+                    {i === actual && (
+                      <span
+                        key={`${actual}-${pausado}`}
+                        className="block h-full w-full origin-left bg-accent motion-reduce:animate-none"
+                        style={{
+                          animation: pausado
+                            ? "none"
+                            : `llenar ${INTERVALO}ms linear forwards`,
+                        }}
+                      />
+                    )}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex shrink-0 items-center">
+              <button
+                type="button"
+                onClick={() => ir(actual - 1)}
+                aria-label="Noticia anterior"
+                className="grid h-9 w-9 place-items-center border border-line text-fg-muted transition-colors hover:border-accent hover:bg-accent hover:text-accent-fg"
+              >
+                <span aria-hidden="true">&#8592;</span>
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={() => ir(actual + 1)}
+                aria-label="Noticia siguiente"
+                className="-ml-px grid h-9 w-9 place-items-center border border-line text-fg-muted transition-colors hover:border-accent hover:bg-accent hover:text-accent-fg"
+              >
+                <span aria-hidden="true">&#8594;</span>
+              </button>
+            </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

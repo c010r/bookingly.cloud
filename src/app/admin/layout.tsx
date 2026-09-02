@@ -6,5 +6,6 @@ export const metadata: Metadata = {
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto max-w-6xl py-8">{children}</div>;
+  // El <main> del sitio ya no lleva contenedor propio: lo pone cada pagina.
+  return <div className="mx-auto max-w-6xl px-5 py-8">{children}</div>;
 }

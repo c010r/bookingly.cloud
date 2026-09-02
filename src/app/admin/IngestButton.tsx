@@ -9,7 +9,7 @@ function Button() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-lg border border-neon bg-neon px-4 py-2.5 text-sm font-semibold text-bg transition-opacity hover:opacity-85 disabled:opacity-50"
+      className="rounded-lg border border-accent bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg transition-opacity hover:opacity-85 disabled:opacity-50"
     >
       {pending ? "Buscando y reescribiendo..." : "Ingerir noticias"}
     </button>

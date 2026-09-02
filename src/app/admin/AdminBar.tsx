@@ -19,7 +19,7 @@ export default function AdminBar({ title }: { title: string }) {
             <Link
               key={e.label}
               href={e.href}
-              className="text-fg-muted transition-colors hover:text-neon"
+              className="text-fg-muted transition-colors hover:text-accent"
             >
               {e.label}
             </Link>

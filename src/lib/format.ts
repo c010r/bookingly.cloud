@@ -41,3 +41,13 @@ export function formatViews(n: number | null | undefined): string {
   const v = n && n > 0 ? n : 0;
   return `${v.toLocaleString("es-ES")} ${v === 1 ? "vista" : "vistas"}`;
 }
+
+/**
+ * ISO 8601 para el atributo datetime de <time>. Acepta lo que devuelve la
+ * base (Date) y tambien una cadena, por si el dato llega ya serializado.
+ */
+export function isoDate(d: Date | string | null): string | undefined {
+  if (!d) return undefined;
+  const date = typeof d === "string" ? new Date(d) : d;
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+}

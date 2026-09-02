@@ -1,5 +1,5 @@
 import Link from "next/link";
-import ArticleCard from "@/components/ArticleCard";
+import ArticleGrid from "@/components/ArticleGrid";
 import Hero from "@/components/Hero";
 import SectionTitle from "@/components/SectionTitle";
 import {
@@ -35,15 +35,20 @@ export default async function Home({
 
   if (articles.length === 0) {
     return (
-      <div className="my-20 rounded-xl border border-dashed border-line-strong p-16 text-center text-fg-faint">
-        <p className="font-mono text-sm">Todavia no hay noticias publicadas.</p>
-        <p className="mt-2 text-[13px]">
-          La ingesta corre sola cada 30 minutos; tambien puedes lanzarla desde el{" "}
-          <Link href="/admin" className="text-neon underline underline-offset-4">
-            panel
-          </Link>
-          .
-        </p>
+      <div className="contenedor">
+        <div className="my-24 border-y-2 border-fg py-20 text-center">
+          <p className="titular-l">Todavia no hay noticias publicadas.</p>
+          <p className="entradilla mx-auto mt-4 max-w-md text-fg-muted">
+            La ingesta corre sola cada 30 minutos; tambien puedes lanzarla desde el{" "}
+            <Link
+              href="/admin"
+              className="text-fg underline decoration-accent decoration-2 underline-offset-4"
+            >
+              panel
+            </Link>
+            .
+          </p>
+        </div>
       </div>
     );
   }
@@ -60,37 +65,41 @@ export default async function Home({
         <Hero destacadas={destacadas} recientes={recientes} masLeidas={masLeidas} />
       )}
 
-      <SectionTitle>{primera ? "Ultimas noticias" : `Pagina ${page}`}</SectionTitle>
+      <div className="contenedor">
+        <SectionTitle>{primera ? "Ultimas noticias" : `Pagina ${page}`}</SectionTitle>
+        <ArticleGrid articulos={rejilla} />
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {rejilla.map((a, i) => (
-          <ArticleCard key={a.id} article={a} index={i} />
-        ))}
+        {ultimaPagina > 1 && (
+          <nav
+            aria-label="Paginacion"
+            className="mt-20 flex items-center justify-between gap-4 border-t-2 border-fg pt-5"
+          >
+            <div className="flex-1">
+              {page > 1 && (
+                <Link
+                  href={page === 2 ? "/" : `/?p=${page - 1}`}
+                  className="etiqueta inline-block border-2 border-fg px-4 py-2.5 transition-colors hover:border-accent hover:bg-accent hover:text-accent-fg"
+                >
+                  &#8592; Anterior
+                </Link>
+              )}
+            </div>
+            <span className="numeral shrink-0 text-[1.4rem] text-fg-faint">
+              {page} / {ultimaPagina}
+            </span>
+            <div className="flex flex-1 justify-end">
+              {page < ultimaPagina && (
+                <Link
+                  href={`/?p=${page + 1}`}
+                  className="etiqueta inline-block border-2 border-fg px-4 py-2.5 transition-colors hover:border-accent hover:bg-accent hover:text-accent-fg"
+                >
+                  Siguiente &#8594;
+                </Link>
+              )}
+            </div>
+          </nav>
+        )}
       </div>
-
-      {ultimaPagina > 1 && (
-        <nav className="mt-14 flex items-center justify-center gap-3 font-mono text-[13px]">
-          {page > 1 && (
-            <Link
-              href={page === 2 ? "/" : `/?p=${page - 1}`}
-              className="rounded-lg border border-line px-4 py-2 text-fg-muted transition-colors hover:border-neon hover:text-neon"
-            >
-              ← Anterior
-            </Link>
-          )}
-          <span className="px-2 text-fg-faint tabular-nums">
-            {page} / {ultimaPagina}
-          </span>
-          {page < ultimaPagina && (
-            <Link
-              href={`/?p=${page + 1}`}
-              className="rounded-lg border border-line px-4 py-2 text-fg-muted transition-colors hover:border-neon hover:text-neon"
-            >
-              Siguiente →
-            </Link>
-          )}
-        </nav>
-      )}
     </>
   );
 }

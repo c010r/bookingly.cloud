@@ -1,11 +1,11 @@
 import Link from "next/link";
 import type { Article } from "@/lib/repo";
 import HeroCarousel from "./HeroCarousel";
-import { formatRelative } from "@/lib/format";
+import { formatRelative, formatViews } from "@/lib/format";
 
 /**
- * Portada: la noticia principal a la izquierda y, a la derecha, dos columnas
- * de apoyo — lo ultimo en entrar y lo mas leido de la semana.
+ * Apertura de la portada: la seleccion destacada a sangre y, debajo, dos
+ * indices tipograficos — lo ultimo en entrar y lo mas leido de la semana.
  */
 export default function Hero({
   destacadas,
@@ -16,92 +16,81 @@ export default function Hero({
   recientes: Article[];
   masLeidas: Article[];
 }) {
-  const tope = Math.max(...masLeidas.map((a) => a.views), 1);
-
   return (
-    <section className="relative mt-6 mb-14 overflow-hidden rounded-2xl border border-line bg-surface">
-      <div className="grid gap-px bg-line lg:grid-cols-[1.55fr_1fr]">
-        {/* min-w-0 es imprescindible: la pista del carrusel mide 500% y, como
-            los elementos de una rejilla se dimensionan por su contenido
-            minimo, sin esto la columna se expande y expulsa a la de al lado. */}
-        <div className="min-w-0 overflow-hidden bg-surface">
-          <HeroCarousel articulos={destacadas} />
-        </div>
+    <>
+      <section aria-label="Destacadas" className="border-b-2 border-fg">
+        <HeroCarousel articulos={destacadas} />
+      </section>
 
-        {/* --- Columnas de apoyo --- */}
-        <div className="grid min-w-0 gap-px bg-line">
-          <Panel titulo="Recien llegadas" acento="neon-2">
+      <div className="contenedor">
+        <div className="grid border-b-2 border-fg lg:grid-cols-2">
+          <Indice titulo="Recien llegadas" className="lg:border-r lg:border-line lg:pr-10">
             <ol className="divide-y divide-line">
-              {recientes.map((a, i) => (
-                <li key={a.id} className="rise" style={{ animationDelay: `${i * 60}ms` }}>
+              {recientes.map((a) => (
+                <li key={a.id}>
                   <Link
                     href={`/noticia/${a.slug}`}
-                    className="group flex gap-3 py-3 first:pt-0 last:pb-0"
+                    className="grupo-pieza group flex gap-4 py-3.5"
                   >
-                    <span className="mt-0.5 font-mono text-[10.5px] text-neon-2 tabular-nums">
+                    <span className="meta w-14 shrink-0 pt-0.5 font-bold text-accent">
                       {formatRelative(a.published_at)}
                     </span>
-                    <span className="flex-1 text-[13.5px] leading-snug font-medium transition-colors group-hover:text-neon-2">
-                      {a.title}
+                    <span className="enlace-titular titular-s flex-1">{a.title}</span>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </Indice>
+
+          <Indice titulo="Mas leidas" className="lg:pl-10">
+            <ol className="divide-y divide-line">
+              {masLeidas.map((a, i) => (
+                <li key={a.id}>
+                  <Link
+                    href={`/noticia/${a.slug}`}
+                    className="grupo-pieza group flex items-start gap-4 py-3.5"
+                  >
+                    <span
+                      className={`numeral w-12 shrink-0 text-[2.1rem] ${
+                        i === 0 ? "text-accent" : "text-fg-faint/45"
+                      }`}
+                      aria-hidden="true"
+                    >
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="flex-1">
+                      <span className="enlace-titular titular-s block">{a.title}</span>
+                      <span className="meta mt-1 block text-fg-faint">
+                        {formatViews(a.views)}
+                      </span>
                     </span>
                   </Link>
                 </li>
               ))}
             </ol>
-          </Panel>
-
-          <Panel titulo="Mas leidas" acento="neon-3">
-            <ol className="space-y-3.5">
-              {masLeidas.map((a, i) => (
-                <li key={a.id} className="rise" style={{ animationDelay: `${i * 60 + 120}ms` }}>
-                  <Link href={`/noticia/${a.slug}`} className="group block">
-                    <div className="flex items-baseline gap-2.5">
-                      <span className="font-mono text-sm font-semibold text-neon-3 tabular-nums">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <span className="flex-1 text-[13.5px] leading-snug font-medium transition-colors group-hover:text-neon-3">
-                        {a.title}
-                      </span>
-                    </div>
-                    {/* Barra proporcional a la mas leida del listado. */}
-                    <div className="mt-1.5 ml-[2.1rem] h-[3px] overflow-hidden rounded-full bg-surface-2">
-                      <div
-                        className="bar-fill h-full rounded-full bg-neon-3/70"
-                        style={{
-                          width: `${Math.max(6, Math.round((a.views / tope) * 100))}%`,
-                          animationDelay: `${i * 90 + 200}ms`,
-                        }}
-                      />
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ol>
-          </Panel>
+          </Indice>
         </div>
       </div>
-    </section>
+    </>
   );
 }
 
-function Panel({
+function Indice({
   titulo,
-  acento,
+  className = "",
   children,
 }: {
   titulo: string;
-  acento: "neon-2" | "neon-3";
+  className?: string;
   children: React.ReactNode;
 }) {
-  const color = acento === "neon-2" ? "text-neon-2" : "text-neon-3";
   return (
-    <div className="bg-surface p-6 sm:p-7">
-      <h2
-        className={`caret mb-4 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] ${color}`}
-      >
+    <section className={`py-9 ${className}`}>
+      <h2 className="etiqueta mb-4 flex items-center gap-2.5 border-b border-fg pb-2.5">
+        <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 bg-accent" />
         {titulo}
       </h2>
       {children}
-    </div>
+    </section>
   );
 }
