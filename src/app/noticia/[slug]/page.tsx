@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBySlug, getRelated } from "@/lib/repo";
-import { renderMarkdown } from "@/lib/markdown";
+import { renderMarkdown, empiezaConSigla } from "@/lib/markdown";
 import ArticleGrid from "@/components/ArticleGrid";
 import SectionTitle from "@/components/SectionTitle";
 import ViewCounter from "@/components/ViewCounter";
@@ -115,7 +115,7 @@ export default async function ArticlePage({ params }: Params) {
 
       <div className="contenedor">
         <div
-          className="prose-news mx-auto max-w-[42rem]"
+          className={`prose-news mx-auto max-w-[42rem]${empiezaConSigla(article.body_md) ? " sin-capitular" : ""}`}
           dangerouslySetInnerHTML={{ __html: html }}
         />
 

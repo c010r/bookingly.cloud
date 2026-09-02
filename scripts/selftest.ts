@@ -2,6 +2,7 @@
 import { renderMarkdown, excerpt } from "../src/lib/markdown";
 import { slugify, fingerprint, readingMinutes } from "../src/lib/slug";
 import { formatViews } from "../src/lib/format";
+import { empiezaConSigla } from "../src/lib/markdown";
 import { parseJsonLoose } from "../src/lib/llm";
 import { similarity, titleKey, normalizeTitle, UMBRAL_DUPLICADO } from "../src/lib/dedupe";
 import { normalizeCategory } from "../src/lib/categories";
@@ -56,6 +57,15 @@ check(
   parseJsonLoose<{ titular: string }>('```json\n{"titular":"hola"}\n```').titular === "hola"
 );
 check("json con ruido alrededor", parseJsonLoose<{ a: number }>('Claro:\n{"a":1}\nEso es todo.').a === 1);
+
+/* --- capitular --- */
+check("sigla: no lleva capitular", empiezaConSigla("AEREDIUM lanza AERSeal para todos."));
+check("palabra normal: si lleva", !empiezaConSigla("Google cierra su servicio de fotos."));
+check(
+  "se salta el titulo previo",
+  empiezaConSigla("## Que ha pasado\n\nNASA firma con Blue Origin.")
+);
+check("nombre con mayuscula suelta", !empiezaConSigla("Apple compra una startup de IA."));
 
 /* --- deduplicacion --- */
 const t1 = "Apple compra la startup de IA Brighter AI por 200 millones";

@@ -36,3 +36,22 @@ export function excerpt(md: string, length = 180): string {
     .trim();
   return plain.length > length ? `${plain.slice(0, length).trimEnd()}...` : plain;
 }
+
+/**
+ * La capitular parte la primera palabra, y con una sigla el resultado se lee
+ * mal: un articulo que empieza por "AEREDIUM" queda como "A EREDIUM". Se
+ * detecta mirando si las dos primeras letras van en mayuscula, que es lo que
+ * distingue una sigla de una palabra normal.
+ */
+export function empiezaConSigla(md: string): boolean {
+  const primerParrafo = md
+    .split(/\n\s*\n/)
+    .map((b) => b.trim())
+    // Nos saltamos titulos, citas y listas: la capitular cae en el primer parrafo.
+    .find((b) => b && !/^(#{1,6}\s|>\s|[-*+]\s|\d+\.\s|```)/.test(b));
+  if (!primerParrafo) return false;
+  // Fuera el enfasis de markdown y cualquier signo de apertura.
+  const limpio = primerParrafo.replace(/^[^\p{L}\p{N}]+/u, "");
+  const dos = limpio.slice(0, 2);
+  return dos.length === 2 && dos === dos.toUpperCase() && /^\p{Lu}{2}$/u.test(dos);
+}

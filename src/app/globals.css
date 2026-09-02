@@ -371,8 +371,10 @@
   text-wrap: pretty;
 }
 
-/* Capitular: el guino de revista impresa que abre el texto. */
-.prose-news > p:first-of-type::first-letter {
+/* Capitular: el guino de revista impresa que abre el texto. Se desactiva con
+   .sin-capitular cuando el articulo abre con una sigla, porque la capitular
+   parte la palabra y "AEREDIUM" acaba leyendose como "A EREDIUM". */
+.prose-news:not(.sin-capitular) > p:first-of-type::first-letter {
   float: left;
   font-family: var(--font-display);
   font-weight: 900;
