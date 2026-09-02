@@ -4,20 +4,29 @@
  */
 export const CATEGORIES = [
   { slug: "ia", name: "Inteligencia artificial", hint: "modelos, LLM, IA generativa, chips de IA, investigacion" },
-  { slug: "software", name: "Software", hint: "sistemas operativos, apps, lenguajes, desarrollo, open source" },
-  { slug: "hardware", name: "Hardware", hint: "chips, moviles, ordenadores, componentes, dispositivos" },
+  { slug: "software", name: "Software", hint: "sistemas operativos, lenguajes, desarrollo, open source, herramientas" },
+  { slug: "apps", name: "Apps y moviles", hint: "aplicaciones moviles, iOS, Android, tiendas de apps, mensajeria" },
+  { slug: "hardware", name: "Hardware", hint: "lanzamientos de producto, chips, moviles, ordenadores, componentes" },
   { slug: "ciberseguridad", name: "Ciberseguridad", hint: "brechas, malware, vulnerabilidades, privacidad, cifrado" },
-  { slug: "internet", name: "Internet y redes", hint: "plataformas, redes sociales, navegadores, infraestructura, cloud" },
-  { slug: "ciencia", name: "Ciencia y espacio", hint: "espacio, fisica, biotecnologia, energia, clima" },
-  { slug: "negocios", name: "Negocios y startups", hint: "financiacion, adquisiciones, resultados, mercado, empleo tech" },
-  { slug: "politica", name: "Politica digital", hint: "regulacion, leyes, antimonopolio, tribunales, gobiernos" },
-  { slug: "gaming", name: "Videojuegos", hint: "juegos, consolas, motores, industria del videojuego" },
-  { slug: "cultura", name: "Cultura digital", hint: "tendencias, sociedad, creadores, entretenimiento, streaming" },
+  { slug: "internet", name: "Internet y redes", hint: "plataformas, navegadores, infraestructura, cloud" },
+  { slug: "negocios", name: "Empresas y startups", hint: "companias de TI, financiacion, adquisiciones, resultados, empleo tech" },
 ] as const;
 
 export type CategorySlug = (typeof CATEGORIES)[number]["slug"];
 
 export const DEFAULT_CATEGORY: CategorySlug = "software";
+
+/**
+ * Lo que el modelo devuelve cuando la noticia no es de este medio. El foco es
+ * estrecho a proposito —IA, software, apps, empresas de TI y lanzamientos— y
+ * los feeds generalistas traen mucho videojuego, ciencia y cultura que antes
+ * se publicaba por no tener donde rechazarlo.
+ */
+export const FUERA_DE_FOCO = "descartar";
+
+export function esFueraDeFoco(value: unknown): boolean {
+  return typeof value === "string" && value.trim().toLowerCase() === FUERA_DE_FOCO;
+}
 
 const BY_SLUG = new Map(CATEGORIES.map((c) => [c.slug, c]));
 

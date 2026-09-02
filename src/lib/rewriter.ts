@@ -1,6 +1,22 @@
 import { chat, parseJsonLoose } from "./llm";
 import { env } from "./env";
-import { CATEGORY_PROMPT_BLOCK, normalizeCategory, type CategorySlug } from "./categories";
+import {
+  CATEGORY_PROMPT_BLOCK,
+  esFueraDeFoco,
+  normalizeCategory,
+  type CategorySlug,
+} from "./categories";
+
+/**
+ * La noticia no es de este medio. No es un fallo: es el filtro editorial
+ * haciendo su trabajo, y por eso se cuenta aparte de los errores.
+ */
+export class FueraDeFocoError extends Error {
+  constructor(readonly motivo: string) {
+    super(`Fuera del foco del medio: ${motivo}`);
+    this.name = "FueraDeFocoError";
+  }
+}
 
 export type RewriteInput = {
   sourceTitle: string;
@@ -80,6 +96,11 @@ CATEGORIA
 Elige exactamente una de estas secciones (devuelve el slug):
 ${CATEGORY_PROMPT_BLOCK}
 
+Si eliges "descartar", no escribas el articulo: devuelve el JSON con
+"categoria": "descartar", una frase en "calidad_nota" explicando por que no
+encaja, y el resto de campos vacios. No fuerces una seccion que no corresponde
+solo por tener donde ponerla.
+
 CONTROL DE CALIDAD
 Ademas de escribir, evaluas tu propia pieza de 0 a 100 pensando en si es publicable sin que nadie la revise:
 - 85-100: noticia solida, fuente clara, datos concretos, texto redondo.
@@ -130,6 +151,12 @@ Reescribela siguiendo tus instrucciones y devuelve solo el JSON.`;
   });
 
   const parsed = parseJsonLoose<RawRewrite>(respuesta.content);
+
+  // Antes de exigir titular y cuerpo: si el modelo la rechaza, no los habra
+  // escrito, y ese es justamente el ahorro.
+  if (esFueraDeFoco(parsed.categoria)) {
+    throw new FueraDeFocoError(clean(parsed.calidad_nota) || "no encaja en ninguna seccion");
+  }
 
   const title = clean(parsed.titular);
   const bodyMd = (parsed.cuerpo_markdown || "").trim();

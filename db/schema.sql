@@ -90,3 +90,14 @@ CREATE TABLE IF NOT EXISTS llm_cooldowns (
   until      TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Noticias que el redactor rechazo por quedar fuera del foco del medio. Se
+-- guarda solo la huella para no volver a mandarlas al modelo en cada tanda:
+-- la ingesta corre cada 5 minutos y el cupo diario es limitado.
+CREATE TABLE IF NOT EXISTS descartes (
+  fingerprint TEXT PRIMARY KEY,
+  source_url  TEXT NOT NULL,
+  title       TEXT NOT NULL,
+  motivo      TEXT,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);

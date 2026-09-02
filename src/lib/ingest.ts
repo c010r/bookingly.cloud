@@ -4,6 +4,7 @@ import { query, queryOne } from "./db";
 import { fingerprint, readingMinutes, slugify } from "./slug";
 import { rewriteArticle } from "./rewriter";
 import { LlmError } from "./llm";
+import { FueraDeFocoError } from "./rewriter";
 import { attachExtraSource, findDuplicate, titleKey } from "./dedupe";
 import { env } from "./env";
 import { readme, repoContent, trendingRepos } from "./collectors/github";
@@ -180,6 +181,8 @@ export type IngestReport = {
   published: number;
   duplicates: number;
   skipped: number;
+  /** Rechazadas por el filtro editorial: no son fallos. */
+  fueraDeFoco: number;
   /** Descartadas por ser mas viejas que la ventana de frescura. */
   stale: number;
   failed: number;
@@ -202,6 +205,7 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
     published: 0,
     duplicates: 0,
     skipped: 0,
+    fueraDeFoco: 0,
     stale: 0,
     failed: 0,
     errors: [],
@@ -244,7 +248,9 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
       // Nivel 1 de deduplicacion: exactamente la misma URL.
       const fp = fingerprint(item.link);
       const exists = await queryOne<{ id: number }>(
-        `SELECT id FROM articles WHERE fingerprint = $1`,
+        `SELECT id FROM articles WHERE fingerprint = $1
+          UNION ALL
+         SELECT 1 FROM descartes WHERE fingerprint = $1`,
         [fp]
       );
       if (exists) {
@@ -355,6 +361,20 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
           `${publish ? "PUBLICADO" : "borrador"} [${rewritten.category}] ${rewritten.qualityScore}/100 — ${rewritten.title}`
         );
       } catch (err) {
+        // El filtro editorial no es un fallo: se anota la huella para no volver
+        // a mandarla al modelo en la proxima tanda y se sigue.
+        if (err instanceof FueraDeFocoError) {
+          await query(
+            `INSERT INTO descartes (fingerprint, source_url, title, motivo)
+                  VALUES ($1, $2, $3, $4)
+             ON CONFLICT (fingerprint) DO NOTHING`,
+            [fp, item.link, item.title.slice(0, 300), err.motivo.slice(0, 300)]
+          );
+          report.fueraDeFoco++;
+          log(`Fuera de foco (${err.motivo}): ${item.title}`);
+          continue;
+        }
+
         report.failed++;
         const msg = `${item.title}: ${errMsg(err)}`;
         report.errors.push(msg);

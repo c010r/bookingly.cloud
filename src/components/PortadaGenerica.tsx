@@ -7,7 +7,7 @@ import type { CategorySlug } from "@/lib/categories";
  * tamano y se adapta solo al tema. Hay una variante por seccion (motivo
  * geometrico + tono propios) para que treinta notas no compartan la misma
  * estampa y para que de un vistazo se distinga si la pieza es de IA, de
- * hardware o de ciencia.
+ * hardware o de apps.
  *
  * Es decorativa: va con aria-hidden y sin texto. El titular y el antetitulo
  * que hay justo debajo ya dicen de que va la nota.
@@ -47,6 +47,18 @@ const MOTIVOS: Record<CategorySlug, React.ReactNode> = {
       <path d="M136 112 h20 M166 112 h34" />
     </>
   ),
+  // Telefono con rejilla de iconos.
+  apps: (
+    <>
+      <rect x="122" y="34" width="76" height="132" rx="10" />
+      <path d="M148 46 h24" />
+      <rect x="136" y="66" width="20" height="20" />
+      <rect x="164" y="66" width="20" height="20" />
+      <rect x="136" y="94" width="20" height="20" />
+      <rect x="164" y="94" width="20" height="20" />
+      <path d="M144 140 h32" />
+    </>
+  ),
   // Chip con sus patillas.
   hardware: (
     <>
@@ -71,14 +83,6 @@ const MOTIVOS: Record<CategorySlug, React.ReactNode> = {
       <path d="M102 100 H218 M112 70 H208 M112 130 H208" />
     </>
   ),
-  // Orbitas cruzadas.
-  ciencia: (
-    <>
-      <circle cx="160" cy="100" r="14" />
-      <ellipse cx="160" cy="100" rx="62" ry="26" transform="rotate(-28 160 100)" />
-      <ellipse cx="160" cy="100" rx="62" ry="26" transform="rotate(28 160 100)" />
-    </>
-  ),
   // Barras y curva ascendente.
   negocios: (
     <>
@@ -88,32 +92,6 @@ const MOTIVOS: Record<CategorySlug, React.ReactNode> = {
       <rect x="182" y="58" width="22" height="98" />
       <path d="M104 92 L140 66 L172 78 L214 40" />
       <path d="M196 40 h18 v18" />
-    </>
-  ),
-  // Fachada con columnas.
-  politica: (
-    <>
-      <path d="M96 74 L160 42 L224 74 Z" />
-      <path d="M100 88 H220 M96 152 H224" />
-      <path d="M118 88 V152 M144 88 V152 M176 88 V152 M202 88 V152" />
-    </>
-  ),
-  // Cruceta y botones de mando.
-  gaming: (
-    <>
-      <path d="M114 86 h22 V64 h26 v22 h22 v26 h-22 v22 h-26 v-22 h-22 Z" />
-      <circle cx="204" cy="82" r="11" />
-      <circle cx="204" cy="122" r="11" />
-      <path d="M96 142 h128" />
-    </>
-  ),
-  // Ondas de emision.
-  cultura: (
-    <>
-      <circle cx="160" cy="128" r="10" />
-      <path d="M133 108 a38 38 0 0 1 54 0" />
-      <path d="M116 88 a62 62 0 0 1 88 0" />
-      <path d="M99 68 a86 86 0 0 1 122 0" />
     </>
   ),
 };
