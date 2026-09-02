@@ -97,11 +97,26 @@ const DESCUBRIMIENTO: Feed[] = [
   { name: "InfoQ", feed: "https://feed.infoq.com/", site: "https://www.infoq.com", lang: "en" },
   { name: "Changelog", feed: "https://changelog.com/feed", site: "https://changelog.com", lang: "en" },
   { name: "Console.dev", feed: "https://console.dev/rss.xml", site: "https://console.dev", lang: "en" },
+  { name: "The Register", feed: "https://www.theregister.com/headlines.atom", site: "https://www.theregister.com", lang: "en" },
+  { name: "Red Hat Enable Sysadmin", feed: "https://www.redhat.com/sysadmin/rss.xml", site: "https://www.redhat.com/sysadmin", lang: "en" },
+  { name: "Dev.to", feed: "https://dev.to/feed", site: "https://dev.to", lang: "en" },
+
+  // Reddit limita por frecuencia, no bloquea: midiendo desde el servidor
+  // responde una de cada tres o cuatro veces, incluso espaciando 20 s. Se
+  // dejan puestas porque cuando contestan traen material que no da ningun
+  // medio, y un feed que falla solo se anota en el log y no rompe la tanda.
+  // Ojo: son comunidades de preguntas y quejas mas que de noticias, asi que
+  // el filtro editorial va a descartar buena parte de lo que traigan.
+  { name: "r/sysadmin", feed: "https://www.reddit.com/r/sysadmin/.rss", site: "https://www.reddit.com/r/sysadmin/", lang: "en" },
+  { name: "r/networking", feed: "https://www.reddit.com/r/networking/.rss", site: "https://www.reddit.com/r/networking/", lang: "en" },
+  { name: "r/devops", feed: "https://www.reddit.com/r/devops/.rss", site: "https://www.reddit.com/r/devops/", lang: "en" },
+  { name: "r/selfhosted", feed: "https://www.reddit.com/r/selfhosted/.rss", site: "https://www.reddit.com/r/selfhosted/", lang: "en" },
 ];
 
-// Reddit queda fuera a proposito: bloquea las IP de centros de datos y todas
-// sus fuentes devuelven 429 desde el servidor, incluida la r/SideProject que
-// hubo aqui. Si algun dia se quiere volver, hara falta un intermediario.
+// Descartadas tras probarlas desde el servidor: ZDNET (404 en su rss.xml y en
+// dos rutas alternativas), Server Fault (403) y el RSS crudo de Hacker News,
+// que traeria la portada entera sin filtrar; ya esta hnrss con umbral de 250
+// puntos, que es la misma fuente pero quedandose solo con lo que destaca.
 
 /** Medios en espanol: aportan contexto local y vocabulario natural. */
 const ES: Feed[] = [
