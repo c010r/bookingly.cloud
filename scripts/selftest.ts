@@ -3,6 +3,7 @@ import { renderMarkdown, excerpt } from "../src/lib/markdown";
 import { slugify, fingerprint, readingMinutes } from "../src/lib/slug";
 import { formatViews } from "../src/lib/format";
 import { empiezaConSigla } from "../src/lib/markdown";
+import { esRechazo } from "../src/lib/rewriter";
 import { parseJsonLoose } from "../src/lib/llm";
 import { similarity, titleKey, normalizeTitle, UMBRAL_DUPLICADO } from "../src/lib/dedupe";
 import { normalizeCategory } from "../src/lib/categories";
@@ -57,6 +58,14 @@ check(
   parseJsonLoose<{ titular: string }>('```json\n{"titular":"hola"}\n```').titular === "hola"
 );
 check("json con ruido alrededor", parseJsonLoose<{ a: number }>('Claro:\n{"a":1}\nEso es todo.').a === 1);
+
+/* --- filtro editorial --- */
+check("rechaza con el campo propio", esRechazo({ es_de_ti: false, categoria: "software" }));
+check("rechaza si el modelo manda 'false' como texto", esRechazo({ es_de_ti: "false" }));
+check("rechaza por la categoria de respaldo", esRechazo({ categoria: "descartar" }));
+check("acepta una noticia normal", !esRechazo({ es_de_ti: true, categoria: "ia" }));
+// Un modelo que se salte el campo no debe hacer que se descarte todo.
+check("sin el campo, no rechaza", !esRechazo({ categoria: "hardware" }));
 
 /* --- capitular --- */
 check("sigla: no lleva capitular", empiezaConSigla("AEREDIUM lanza AERSeal para todos."));

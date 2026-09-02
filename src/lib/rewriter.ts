@@ -18,6 +18,20 @@ export class FueraDeFocoError extends Error {
   }
 }
 
+/**
+ * Si el modelo ha rechazado la noticia. Se mira por dos vias porque no todos
+ * los modelos rellenan igual: el campo propio es el canal principal, y la
+ * categoria "descartar" queda de respaldo para los que se saltan el campo.
+ * Extraida aparte para poder probarla sin llamar a la API.
+ */
+export function esRechazo(parsed: {
+  es_de_ti?: unknown;
+  categoria?: unknown;
+}): boolean {
+  if (parsed.es_de_ti === false || parsed.es_de_ti === "false") return true;
+  return esFueraDeFoco(parsed.categoria);
+}
+
 export type RewriteInput = {
   sourceTitle: string;
   sourceUrl: string;
@@ -173,7 +187,7 @@ Reescribela siguiendo tus instrucciones y devuelve solo el JSON.`;
 
   // Antes de exigir titular y cuerpo: si el modelo la rechaza, no los habra
   // escrito, y ese es justamente el ahorro.
-  if (parsed.es_de_ti === false || esFueraDeFoco(parsed.categoria)) {
+  if (esRechazo(parsed)) {
     throw new FueraDeFocoError(clean(parsed.calidad_nota) || "no encaja en ninguna seccion");
   }
 
