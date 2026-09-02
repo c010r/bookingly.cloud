@@ -73,7 +73,10 @@ export default function HeroCarousel({ articulos }: { articulos: Article[] }) {
             >
               <Link
                 href={`/noticia/${a.slug}`}
-                className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.02fr)]"
+                /* lg:h-full es lo que evita el hueco: todas las diapositivas
+                   miden lo que la mas alta, y sin esto la imagen se quedaba
+                   en su altura natural dejando un blanco enorme debajo. */
+                className="grid lg:h-full lg:grid-cols-[minmax(0,1fr)_minmax(0,1.02fr)]"
                 tabIndex={i === actual ? 0 : -1}
               >
                 {/* Imagen: banda a sangre arriba en movil, columna derecha

@@ -98,12 +98,15 @@
 
   --color-danger: var(--danger);
 
-  /* Las dos primeras las inyecta next/font desde layout.tsx. */
-  --font-display: var(--fuente-titular), "Archivo", ui-sans-serif, system-ui,
+  /* Las dos primeras las inyecta next/font desde layout.tsx, en el <html>.
+     La reserva dentro del var() es deliberada: sin ella, si la clase no
+     estuviera puesta, el var() seria invalido y tumbaria toda la declaracion
+     dejando la pagina con la tipografia del sistema y sin ningun aviso. */
+  --font-display: var(--fuente-titular, "Archivo"), ui-sans-serif, system-ui,
     -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-sans: var(--fuente-titular), "Archivo", ui-sans-serif, system-ui,
+  --font-sans: var(--fuente-titular, "Archivo"), ui-sans-serif, system-ui,
     -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-serif: var(--fuente-texto), "Newsreader", Georgia, "Times New Roman", serif;
+  --font-serif: var(--fuente-texto, "Newsreader"), Georgia, "Times New Roman", serif;
   --font-mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, monospace;
 }
 
@@ -321,9 +324,32 @@
   .portada-generica[data-seccion="cultura"] { --tinta-seccion: #8a4494; }
   .portada-generica[data-seccion="politica"] { --tinta-seccion: #8f3f66; }
 
+  /* El color va aqui y no en atributos del SVG: var() no se admite en
+     atributos de presentacion, solo en declaraciones CSS. Ponerlo como
+     fill="var(--x)" deja el rectangulo negro y sin trazos. */
+  .portada-generica .pg-fondo {
+    fill: var(--portada-base);
+  }
+
+  .portada-generica .pg-trama {
+    fill: none;
+    stroke: var(--portada-trazo);
+    stroke-width: 1;
+    opacity: 0.16;
+  }
+
+  .portada-generica .pg-motivo {
+    fill: none;
+    stroke: var(--portada-trazo);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.9;
+  }
+
   /* vector-effect no se hereda: hay que ponerlo en cada trazo. Asi el grosor
      es el mismo en una tarjeta pequena y en la apertura de portada. */
-  .portada-generica svg g > * {
+  .portada-generica .pg-trama > *,
+  .portada-generica .pg-motivo > * {
     vector-effect: non-scaling-stroke;
   }
 }

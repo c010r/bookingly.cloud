@@ -46,11 +46,19 @@ try {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    /* Las variables de next/font van en <html>, no en <body>: --font-sans se
+       declara en :root y ahi tiene que poder resolver --fuente-titular. Si se
+       quedan en el body, el var() es invalido y toda la pagina cae a la
+       tipografia del sistema sin avisar. */
+    <html
+      lang="es"
+      className={`${archivo.variable} ${newsreader.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH }} />
       </head>
-      <body className={`${archivo.variable} ${newsreader.variable} min-h-screen`}>
+      <body className="min-h-screen">
         {/* Cabecera: filete grueso abajo, como la mancheta de un semanario. */}
         <header className="sticky top-0 z-40 border-b-2 border-fg bg-bg">
           <div className="contenedor flex h-16 items-center justify-between gap-4">

@@ -144,26 +144,18 @@ export default function PortadaGenerica({
         role="presentation"
         className="h-full w-full"
       >
-        <rect width="320" height="200" fill="var(--portada-base)" />
+        {/* Ojo: el color NO puede ir en atributos (fill="var(...)"), porque
+            var() no se admite en atributos de presentacion de SVG y el
+            navegador descarta el valor. Va todo por CSS en globals.css. */}
+        <rect className="pg-fondo" width="320" height="200" />
 
-        <g
-          stroke="var(--portada-trazo)"
-          strokeWidth="1"
-          opacity="0.16"
-        >
+        <g className="pg-trama">
           {TRAMA.map((x) => (
             <line key={x} x1={x} y1="220" x2={x + 220} y2="-20" />
           ))}
         </g>
 
-        <g
-          fill="none"
-          stroke="var(--portada-trazo)"
-          strokeWidth={grosor}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity="0.9"
-        >
+        <g className="pg-motivo" style={{ strokeWidth: grosor }}>
           {motivo}
         </g>
       </svg>
