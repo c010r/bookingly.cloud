@@ -39,6 +39,18 @@ const umbral = Number(
   args.find((a) => a.startsWith("--umbral="))?.split("=")[1] ?? Math.max(UMBRAL_DUPLICADO, 0.5)
 );
 
+/**
+ * Ids de articulos cuyo grupo se deja en paz. Para los que agrupa mal: tres
+ * ofertas distintas encadenadas por "Best Buy" y "Labor Day" no son la misma
+ * noticia, y revisar el informe antes de aplicar es parte del procedimiento.
+ */
+const excluidos = new Set(
+  (args.find((a) => a.startsWith("--excluir="))?.split("=")[1] ?? "")
+    .split(",")
+    .map((n) => Number(n.trim()))
+    .filter((n) => Number.isFinite(n) && n > 0)
+);
+
 const filas = await query<Fila>(
   `SELECT id, title, source_title, source_name, source_url, slug,
           quality_score, views, created_at
@@ -87,7 +99,13 @@ for (const f of filas) {
   if (!grupos.has(r)) grupos.set(r, []);
   grupos.get(r)!.push(f);
 }
-const repetidos = [...grupos.values()].filter((g) => g.length > 1);
+const repetidos = [...grupos.values()]
+  .filter((g) => g.length > 1)
+  .filter((g) => {
+    if (!g.some((f) => excluidos.has(f.id))) return true;
+    console.log(`Grupo excluido a mano: ${g.map((f) => "#" + f.id).join(" ")}`);
+    return false;
+  });
 
 if (repetidos.length === 0) {
   console.log("No hay grupos repetidos. Nada que hacer.");
