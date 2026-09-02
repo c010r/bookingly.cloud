@@ -25,11 +25,29 @@ export const env = {
   },
   get llmBaseUrl() {
     if (this.usaConfigAntigua) return process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
-    return process.env.LLM_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai";
+    return process.env.LLM_BASE_URL || "https://api.groq.com/openai/v1";
   },
   get llmModel() {
     if (this.usaConfigAntigua) return process.env.DEEPSEEK_MODEL || "deepseek-chat";
-    return process.env.LLM_MODEL || "gemini-3.6-flash";
+    return process.env.LLM_MODEL || "openai/gpt-oss-120b";
+  },
+  /**
+   * Tokens por minuto que admite el proveedor. Es el limite que aprieta en las
+   * capas gratuitas: Groq da 8000. El cliente se autorregula para no pasarse,
+   * porque un 429 gasta peticion igual que una llamada buena. 0 lo desactiva.
+   */
+  get llmTokensPorMinuto() {
+    const v = process.env.LLM_TOKENS_PER_MINUTE;
+    return v === undefined || v === "" ? 8000 : Number(v);
+  },
+  /**
+   * Cuanto texto del articulo original ve el redactor. Mas no siempre es
+   * mejor: el cuerpo son 350-600 palabras y lo esencial de una noticia esta
+   * en los primeros parrafos. Recortar es lo que hace que quepa en el cupo.
+   */
+  get llmMaxSourceChars() {
+    const v = process.env.LLM_MAX_SOURCE_CHARS;
+    return v === undefined || v === "" ? 6000 : Number(v);
   },
   /** Solo hay claves DEEPSEEK_*: es un .env anterior al cambio de proveedor. */
   get usaConfigAntigua() {

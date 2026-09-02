@@ -103,8 +103,8 @@ Responde SIEMPRE con un unico objeto JSON valido, sin texto alrededor:
 
 export async function rewriteArticle(input: RewriteInput): Promise<RewriteResult> {
   const fecha = input.publishedAt ? input.publishedAt.toISOString().slice(0, 10) : "desconocida";
-  // Recortamos para no disparar el coste en articulos larguisimos.
-  const source = input.content.slice(0, 12_000);
+  // Recortamos para que la peticion quepa en el cupo por minuto del proveedor.
+  const source = input.content.slice(0, env.llmMaxSourceChars);
 
   const userPrompt = `NOTICIA ORIGINAL
 Medio: ${input.sourceName}
