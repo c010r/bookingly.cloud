@@ -41,6 +41,7 @@ export type RewriteResult = {
 };
 
 type RawRewrite = {
+  es_de_ti?: unknown;
   titular?: string;
   entradilla?: string;
   cuerpo_markdown?: string;
@@ -77,6 +78,23 @@ COMO NO ESCRIBES
 - Sin repetir el mismo sustantivo tres veces en un parrafo.
 - Sin cerrar con una moraleja tipo "solo el tiempo dira".
 
+ANTES DE ESCRIBIR: DECIDE SI ES DE ESTE MEDIO
+Esto se responde lo primero, y manda sobre todo lo demas. Este medio cubre
+EXCLUSIVAMENTE tecnologia de la informacion: inteligencia artificial,
+software, aplicaciones moviles, empresas de TI y lanzamientos de producto
+informatico.
+
+La prueba: si de la noticia quitas la parte informatica, se queda sin nada que
+contar? Si sigue habiendo noticia, no es de este medio.
+
+Se descarta, entre otras: normativa municipal y administrativa, sucesos,
+politica general, deporte, cine y series, videojuegos, ciencia y espacio,
+salud, motor, sociedad, y las recopilaciones de ofertas y descuentos. Un
+lanzamiento de producto informatico si entra; una lista de chollos, no.
+
+Ante la duda, descarta. Colar una pieza que no es de TI hace mas dano que
+dejar fuera una dudosa: el lector viene a este sitio por una cosa concreta.
+
 REGLAS INNEGOCIABLES
 - No inventas NADA: ni cifras, ni fechas, ni citas, ni nombres, ni productos. Si no esta en el texto original, no existe.
 - Puedes reproducir una cita del original entrecomillada y atribuida a quien la dijo. Nunca fabricas citas.
@@ -96,10 +114,8 @@ CATEGORIA
 Elige exactamente una de estas secciones (devuelve el slug):
 ${CATEGORY_PROMPT_BLOCK}
 
-Si eliges "descartar", no escribas el articulo: devuelve el JSON con
-"categoria": "descartar", una frase en "calidad_nota" explicando por que no
-encaja, y el resto de campos vacios. No fuerces una seccion que no corresponde
-solo por tener donde ponerla.
+No fuerces una seccion que no corresponde solo por tener donde ponerla: para
+eso esta "descartar".
 
 CONTROL DE CALIDAD
 Ademas de escribir, evaluas tu propia pieza de 0 a 100 pensando en si es publicable sin que nadie la revise:
@@ -109,8 +125,11 @@ Ademas de escribir, evaluas tu propia pieza de 0 a 100 pensando en si es publica
 - 0-39: no deberia publicarse: el original era un teaser, un enlace roto, publicidad o no era una noticia.
 Se estricto: es preferible dejar fuera una pieza mediocre que publicarla.
 
-Responde SIEMPRE con un unico objeto JSON valido, sin texto alrededor:
+Responde SIEMPRE con un unico objeto JSON valido, sin texto alrededor. El
+primer campo es la decision de tema: si es false, deja el resto vacio y no
+escribas el articulo.
 {
+  "es_de_ti": true o false,
   "titular": "titular propio, 55-95 caracteres, sin comillas ni punto final",
   "entradilla": "una o dos frases que amplian el titular, maximo 200 caracteres",
   "cuerpo_markdown": "el articulo en markdown",
@@ -154,7 +173,7 @@ Reescribela siguiendo tus instrucciones y devuelve solo el JSON.`;
 
   // Antes de exigir titular y cuerpo: si el modelo la rechaza, no los habra
   // escrito, y ese es justamente el ahorro.
-  if (esFueraDeFoco(parsed.categoria)) {
+  if (parsed.es_de_ti === false || esFueraDeFoco(parsed.categoria)) {
     throw new FueraDeFocoError(clean(parsed.calidad_nota) || "no encaja en ninguna seccion");
   }
 
