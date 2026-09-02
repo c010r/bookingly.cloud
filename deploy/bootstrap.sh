@@ -98,8 +98,8 @@ DATABASE_URL=postgres://${DB_USER}:${DB_PASS}@127.0.0.1:5432/${DB_NAME}
 PGSSL=0
 
 LLM_API_KEY=${LLM_API_KEY:-PENDIENTE_PON_TU_CLAVE}
-LLM_BASE_URL=${LLM_BASE_URL:-https://api.groq.com/openai/v1}
-LLM_MODEL=${LLM_MODEL:-openai/gpt-oss-120b}
+LLM_BASE_URL=${LLM_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai}
+LLM_MODEL=${LLM_MODEL:-gemini-3.6-flash}
 
 SITE_NAME=${SITE_NAME:-c010r News}
 SITE_URL=https://${DOMAIN}
@@ -142,7 +142,7 @@ else
 LLM_API_KEY=%s
 LLM_BASE_URL=%s
 LLM_MODEL=%s
-'         "${LLM_API_KEY}"         "${LLM_BASE_URL:-https://api.groq.com/openai/v1}"         "${LLM_MODEL:-openai/gpt-oss-120b}" >> "$ENV_FILE"
+'         "${LLM_API_KEY}"         "${LLM_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai}"         "${LLM_MODEL:-gemini-3.6-flash}" >> "$ENV_FILE"
     fi
     echo "Clave del modelo actualizada."
   fi

@@ -25,11 +25,11 @@ export const env = {
   },
   get llmBaseUrl() {
     if (this.usaConfigAntigua) return process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
-    return process.env.LLM_BASE_URL || "https://api.groq.com/openai/v1";
+    return process.env.LLM_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai";
   },
   get llmModel() {
     if (this.usaConfigAntigua) return process.env.DEEPSEEK_MODEL || "deepseek-chat";
-    return process.env.LLM_MODEL || "openai/gpt-oss-120b";
+    return process.env.LLM_MODEL || "gemini-3.6-flash";
   },
   /** Solo hay claves DEEPSEEK_*: es un .env anterior al cambio de proveedor. */
   get usaConfigAntigua() {

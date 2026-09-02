@@ -53,6 +53,17 @@ export async function chat(opts: ChatOptions): Promise<string> {
   return content;
 }
 
+/**
+ * Reintentables: 429 (cupo por minuto), 5xx y tambien 403. Ese ultimo parece
+ * un error nuestro, pero Gemini lo devuelve de forma intermitente cuando su
+ * capa gratuita esta saturada, mezclado con 503. Si la clave estuviera
+ * revocada de verdad, los tres intentos fallarian igual y el 403 saldria
+ * hacia arriba, que es lo que aborta la ingesta entera.
+ */
+function esReintentable(status: number): boolean {
+  return status === 429 || status === 403 || status >= 500;
+}
+
 async function fetchWithRetry(url: string, init: RequestInit, attempts = 3): Promise<Response> {
   let lastError: unknown;
   for (let i = 0; i < attempts; i++) {
@@ -60,13 +71,11 @@ async function fetchWithRetry(url: string, init: RequestInit, attempts = 3): Pro
       const res = await fetch(url, init);
       if (res.ok) return res;
       const text = await res.text().catch(() => "");
-      // 429 y 5xx son reintentables; el resto es un error nuestro.
-      if (res.status !== 429 && res.status < 500) {
-        throw new LlmError(`LLM ${res.status}: ${text.slice(0, 300)}`, res.status);
-      }
-      lastError = new LlmError(`LLM ${res.status}: ${text.slice(0, 300)}`, res.status);
+      const err = new LlmError(`LLM ${res.status}: ${text.slice(0, 300)}`, res.status);
+      if (!esReintentable(res.status)) throw err;
+      lastError = err;
     } catch (err) {
-      if (err instanceof LlmError && err.status && err.status < 500 && err.status !== 429) {
+      if (err instanceof LlmError && err.status && !esReintentable(err.status)) {
         throw err;
       }
       lastError = err;

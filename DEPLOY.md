@@ -81,11 +81,11 @@ Todo vive en `/opt/bookingly.cloud/.env` (permisos `600`, fuera de git). Tras ed
 
 | Variable | Para qué |
 |---|---|
-| `LLM_API_KEY` | Sin ella no se reescribe nada. Gratis en <https://console.groq.com/keys> |
+| `LLM_API_KEY` | Sin ella no se reescribe nada. Gratis en <https://aistudio.google.com/apikey> |
 | `AUTO_PUBLISH` | `0` deja todo en borrador y devuelve el control editorial a una persona |
 | `AUTO_PUBLISH_MIN_SCORE` | Sube el listón (más estricto) o bájalo (más volumen) |
 | `INGEST_MAX_PER_RUN` | Artículos nuevos por ejecución; controla el consumo de cuota |
-| `LLM_MODEL` | Modelo a usar. Por defecto `openai/gpt-oss-120b` (Groq) |
+| `LLM_MODEL` | Modelo a usar. Por defecto `gemini-3.6-flash` (Google AI Studio) |
 | `LLM_BASE_URL` | Cambia de proveedor: vale cualquier API compatible con OpenAI |
 
 La contraseña del panel está en `/root/bookingly-credenciales.txt`. Guárdala en tu gestor y
