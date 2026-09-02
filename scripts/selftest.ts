@@ -1,6 +1,7 @@
 /** Prueba rapida de los helpers puros: no toca red, ni base de datos, ni el modelo. */
 import { renderMarkdown, excerpt } from "../src/lib/markdown";
 import { slugify, fingerprint, readingMinutes } from "../src/lib/slug";
+import { formatViews } from "../src/lib/format";
 import { parseJsonLoose } from "../src/lib/llm";
 import { similarity, titleKey, normalizeTitle, UMBRAL_DUPLICADO } from "../src/lib/dedupe";
 import { normalizeCategory } from "../src/lib/categories";
@@ -41,6 +42,14 @@ check(
   fingerprint("https://a.com/x/?utm=1") === fingerprint("https://A.com/x")
 );
 check("minutos de lectura", readingMinutes(new Array(420).fill("palabra").join(" ")) === 2);
+
+// Una nota recien publicada no debe mostrar "0 vistas": queda como si fallara.
+check("vistas: ninguna no se muestra", formatViews(0) === "" && formatViews(null) === "");
+check("vistas: singular", formatViews(1) === "1 vista", formatViews(1));
+// En espanol las cifras de cuatro digitos van sin separador; a partir de cinco,
+// con punto. Lo hace toLocaleString y conviene fijarlo para que no sorprenda.
+check("vistas: cuatro digitos sin separador", formatViews(1234) === "1234 vistas", formatViews(1234));
+check("vistas: cinco digitos con punto", formatViews(12345) === "12.345 vistas", formatViews(12345));
 
 /* --- json del modelo --- */
 check(

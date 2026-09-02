@@ -28,3 +28,13 @@ export function formatRelative(d: Date | string | null): string {
 
   return date.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
 }
+
+/**
+ * "1.234 vistas". Devuelve cadena vacia cuando no hay ninguna: una nota recien
+ * publicada mostrando "0 vistas" parece rota, y ademas quien la lee primero
+ * veria un cero, porque el contador se incrementa despues de pintar la pagina.
+ */
+export function formatViews(n: number | null | undefined): string {
+  if (!n || n < 1) return "";
+  return `${n.toLocaleString("es-ES")} ${n === 1 ? "vista" : "vistas"}`;
+}

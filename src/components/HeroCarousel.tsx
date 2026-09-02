@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Article } from "@/lib/repo";
 import { categoryName } from "@/lib/categories";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatViews } from "@/lib/format";
 
 const INTERVALO = 7000;
 
@@ -103,6 +103,12 @@ export default function HeroCarousel({ articulos }: { articulos: Article[] }) {
                 <span>{a.reading_minutes} min</span>
                 <span className="opacity-40">·</span>
                 <span>{a.source_name}</span>
+                {formatViews(a.views) && (
+                  <>
+                    <span className="opacity-40">·</span>
+                    <span>{formatViews(a.views)}</span>
+                  </>
+                )}
               </div>
             </Link>
           </article>

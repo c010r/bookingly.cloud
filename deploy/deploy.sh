@@ -95,7 +95,10 @@ escucha_nuestro_servicio() {
 
 say "Comprobacion de salud"
 for i in $(seq 1 20); do
-  if curl -fsS -o /dev/null "http://127.0.0.1:${PORT}/"; then
+  # Los primeros intentos fallan mientras la aplicacion arranca: es normal y no
+  # hace falta ensuciar la salida con el error de curl. Si agota los 20, el
+  # mensaje final ya dice donde mirar.
+  if curl -fsS -o /dev/null "http://127.0.0.1:${PORT}/" 2>/dev/null; then
     # Con 'set -e' no se puede llamar y mirar $? despues: el fallo abortaria
     # el script antes de leerlo.
     estado=0

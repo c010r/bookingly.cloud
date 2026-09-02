@@ -7,7 +7,7 @@ import ArticleCard from "@/components/ArticleCard";
 import SectionTitle from "@/components/SectionTitle";
 import ViewCounter from "@/components/ViewCounter";
 import { categoryName } from "@/lib/categories";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatViews } from "@/lib/format";
 import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
@@ -71,6 +71,12 @@ export default async function ArticlePage({ params }: Params) {
         <time>{formatDate(article.published_at)}</time>
         <span className="opacity-40">·</span>
         <span>{article.reading_minutes} min de lectura</span>
+        {formatViews(article.views) && (
+          <>
+            <span className="opacity-40">·</span>
+            <span>{formatViews(article.views)}</span>
+          </>
+        )}
       </div>
 
       <h1 className="text-3xl leading-[1.12] font-bold tracking-tight text-balance sm:text-[2.7rem]">

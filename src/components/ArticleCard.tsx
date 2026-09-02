@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Article } from "@/lib/repo";
 import { excerpt } from "@/lib/markdown";
 import { categoryName } from "@/lib/categories";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatViews } from "@/lib/format";
 
 export default function ArticleCard({
   article,
@@ -12,6 +12,7 @@ export default function ArticleCard({
   index?: number;
 }) {
   const extra = article.extra_sources?.length ?? 0;
+  const vistas = formatViews(article.views);
 
   return (
     <article
@@ -50,6 +51,12 @@ export default function ArticleCard({
             <span>{article.reading_minutes} min</span>
             <span className="opacity-40">·</span>
             <span>{extra > 0 ? `${extra + 1} fuentes` : article.source_name}</span>
+            {vistas && (
+              <>
+                <span className="opacity-40">·</span>
+                <span>{vistas}</span>
+              </>
+            )}
           </div>
         </div>
       </Link>
