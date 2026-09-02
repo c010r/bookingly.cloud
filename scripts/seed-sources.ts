@@ -87,9 +87,21 @@ const DESCUBRIMIENTO: Feed[] = [
   // es material.
   { name: "Show HN", feed: "https://hnrss.org/show?points=20", site: "https://news.ycombinator.com/show", lang: "en" },
   { name: "Launch HN", feed: "https://hnrss.org/newest?q=Launch+HN", site: "https://news.ycombinator.com", lang: "en" },
-  { name: "r/SideProject", feed: "https://www.reddit.com/r/SideProject/top/.rss?t=day", site: "https://www.reddit.com/r/SideProject/", lang: "en" },
   { name: "AlternativeTo", feed: "https://alternativeto.net/news/feed/", site: "https://alternativeto.net", lang: "en" },
+
+  // Publicaciones para profesionales de TI: infraestructura, kernel,
+  // arquitectura y herramientas. Es el material que le sirve a quien despliega
+  // y mantiene, no a quien compara dos moviles antes de comprar.
+  { name: "The New Stack", feed: "https://thenewstack.io/feed/", site: "https://thenewstack.io", lang: "en" },
+  { name: "LWN", feed: "https://lwn.net/headlines/rss", site: "https://lwn.net", lang: "en" },
+  { name: "InfoQ", feed: "https://feed.infoq.com/", site: "https://www.infoq.com", lang: "en" },
+  { name: "Changelog", feed: "https://changelog.com/feed", site: "https://changelog.com", lang: "en" },
+  { name: "Console.dev", feed: "https://console.dev/rss.xml", site: "https://console.dev", lang: "en" },
 ];
+
+// Reddit queda fuera a proposito: bloquea las IP de centros de datos y todas
+// sus fuentes devuelven 429 desde el servidor, incluida la r/SideProject que
+// hubo aqui. Si algun dia se quiere volver, hara falta un intermediario.
 
 /** Medios en espanol: aportan contexto local y vocabulario natural. */
 const ES: Feed[] = [
