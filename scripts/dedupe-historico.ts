@@ -30,6 +30,14 @@ type Fila = {
 const args = process.argv.slice(2);
 const aplicar = args.includes("--aplicar");
 const dias = Number(args.find((a) => a.startsWith("--dias="))?.split("=")[1] ?? 3);
+/**
+ * Mas exigente que la ingesta a proposito. Alli un error afecta a una pieza;
+ * aqui la agrupacion es transitiva y un solo enlace flojo puede encadenar tres
+ * articulos que no tienen nada que ver. Se puede bajar con --umbral=0.44.
+ */
+const umbral = Number(
+  args.find((a) => a.startsWith("--umbral="))?.split("=")[1] ?? Math.max(UMBRAL_DUPLICADO, 0.5)
+);
 
 const filas = await query<Fila>(
   `SELECT id, title, source_title, source_name, source_url, slug,
@@ -65,7 +73,7 @@ const raiz = (id: number): number => {
 };
 for (let i = 0; i < filas.length; i++) {
   for (let j = i + 1; j < filas.length; j++) {
-    if (parecido(filas[i], filas[j]) >= UMBRAL_DUPLICADO) {
+    if (parecido(filas[i], filas[j]) >= umbral) {
       const ri = raiz(filas[i].id);
       const rj = raiz(filas[j].id);
       if (ri !== rj) grupoDe.set(rj, ri);
@@ -119,7 +127,7 @@ console.log(`\n=== ${repetidos.length} grupos, ${totalRetirados} articulos pasar
 
 if (!aplicar) {
   console.log("\nEsto ha sido solo un informe. Para aplicarlo:");
-  console.log("  npm run dedupe:historico -- --aplicar" + (dias !== 3 ? ` --dias=${dias}` : ""));
+  console.log(`  npm run dedupe:historico -- --aplicar --dias=${dias} --umbral=${umbral}`);
   await closePool();
   process.exit(0);
 }
