@@ -3,7 +3,7 @@ import { extract } from "@extractus/article-extractor";
 import { query, queryOne } from "./db";
 import { fingerprint, readingMinutes, slugify } from "./slug";
 import { rewriteArticle } from "./rewriter";
-import { LlmError } from "./llm";
+import { LlmError, SinModelosError } from "./llm";
 import { FueraDeFocoError } from "./rewriter";
 import { attachExtraSource, findDuplicate, titleKey } from "./dedupe";
 import { env } from "./env";
@@ -373,6 +373,16 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
           report.fueraDeFoco++;
           log(`Fuera de foco (${err.motivo}): ${item.title}`);
           continue;
+        }
+
+        // Si no queda ningun modelo con cupo, no falla esta pieza: falla la
+        // tanda entera. Seguir recorriendo 59 feeds solo llena el registro de
+        // miles de errores identicos y agota el tiempo del servicio.
+        if (err instanceof SinModelosError) {
+          const fatal = `${errMsg(err)}. Se aborta la tanda: no hay con que escribir.`;
+          report.errors.push(fatal);
+          log(fatal);
+          break outer;
         }
 
         report.failed++;

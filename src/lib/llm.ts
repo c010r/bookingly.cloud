@@ -14,6 +14,18 @@ export type ChatOptions = {
 /** Ademas del texto, quien lo escribio: con varios modelos ya no se da por hecho. */
 export type ChatResult = { content: string; model: string };
 
+/**
+ * Todos los modelos estan en pausa. Se distingue del resto de errores porque
+ * no tiene sentido seguir la tanda: lo que falla no es esta pieza, es que no
+ * hay con que escribir ninguna.
+ */
+export class SinModelosError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SinModelosError";
+  }
+}
+
 export class LlmError extends Error {
   constructor(
     message: string,
@@ -40,9 +52,8 @@ export async function chat(opts: ChatOptions): Promise<ChatResult> {
   const candidatos = env.llmModels.filter((m) => !enPausa.has(m.nombre));
 
   if (candidatos.length === 0) {
-    throw new LlmError(
-      `Sin modelos disponibles: ${env.llmModels.map((m) => m.nombre).join(", ")} agotaron su cupo diario`,
-      429
+    throw new SinModelosError(
+      `Sin modelos disponibles: ${env.llmModels.map((m) => m.nombre).join(", ")} agotaron su cupo diario`
     );
   }
 
