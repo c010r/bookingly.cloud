@@ -77,6 +77,17 @@ as_app npm run build
 
 trap - ERR
 
+# Las unidades de systemd viven en el repositorio, pero hasta ahora solo las
+# instalaba el bootstrap: cambiar el intervalo del timer no llegaba nunca al
+# servidor. Se copian igual que alli, con install y sin sustituciones.
+say "Unidades de systemd"
+install -m 644 "$APP_DIR/deploy/bookingly.service" /etc/systemd/system/bookingly.service
+install -m 644 "$APP_DIR/deploy/bookingly-ingest.service" /etc/systemd/system/bookingly-ingest.service
+install -m 644 "$APP_DIR/deploy/bookingly-ingest.timer" /etc/systemd/system/bookingly-ingest.timer
+systemctl daemon-reload
+# El timer relee su intervalo al reiniciarlo, no con el daemon-reload solo.
+systemctl restart bookingly-ingest.timer
+
 say "Reiniciando ${SERVICE}"
 systemctl restart "$SERVICE"
 

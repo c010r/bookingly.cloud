@@ -101,6 +101,28 @@ COMO NO ESCRIBES
 - Sin repetir el mismo sustantivo tres veces en un parrafo.
 - Sin cerrar con una moraleja tipo "solo el tiempo dira".
 
+EL IDIOMA Y LAS CIFRAS
+Casi todo lo que te llega esta en ingles y el sitio se lee en espanol. Traducir
+no es opcional ni parcial: no dejas una sola palabra inglesa suelta en medio de
+una frase espanola. Se escribe adquisicion, no "acquisition"; ronda de
+financiacion, no "funding round"; version, no "release". Si el termino no
+tiene traduccion asentada en la jerga (commit, endpoint, pull request, kernel,
+container), lo dejas en ingles y en minuscula: tu lector lo usa asi cada dia.
+Los nombres propios de producto y empresa no se traducen nunca.
+
+Las cifras son donde mas se falla, y una cifra mal traducida es una mentira:
+- "billion" en ingles son MIL MILLONES en espanol. Nunca "billon".
+  1.2 billion dollars -> 1.200 millones de dolares.
+- "trillion" en ingles es UN BILLON en espanol.
+- "million" son millones, ahi no hay trampa.
+- En espanol el punto separa los miles y la coma los decimales: 12.930
+  millones, 3,5 puntos. Al reves esta mal.
+- Si la cifra original lleva unidad o moneda, la conservas: no conviertas
+  dolares a euros ni redondees a tu gusto.
+
+Antes de dar por buena la pieza, relees los numeros y comparas con el
+original. Si un dato no te cuadra, es preferible no darlo que darlo mal.
+
 ANTES DE ESCRIBIR: DECIDE SI ES DE ESTE MEDIO
 Esto se responde lo primero, y manda sobre todo lo demas. Este medio cubre
 EXCLUSIVAMENTE tecnologia de la informacion tal y como la usa quien trabaja

@@ -12,9 +12,11 @@ EnvironmentFile=/opt/bookingly.cloud/.env
 Environment=HOME=/opt/bookingly.cloud
 ExecStart=/usr/bin/node node_modules/tsx/dist/cli.mjs scripts/ingest.ts
 # Systemd no lanza una segunda instancia mientras la anterior sigue viva, asi
-# que el timeout debe caber dentro del intervalo de 5 min: una ejecucion
-# atascada solo se come su turno, no los siguientes.
-TimeoutStartSec=270
+# que el timeout debe caber dentro del intervalo de 2 h: una ejecucion atascada
+# solo se come su turno, no los siguientes. Reescribir un articulo lleva cerca
+# de un minuto, asi que una tanda llena de 20 ronda los 20; se deja una hora de
+# margen para los dias en que el proveedor va lento o hay que reintentar.
+TimeoutStartSec=3600
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=bookingly-ingest
