@@ -69,7 +69,7 @@ DOMAIN=bookingly.cloud PORT=3010 bash /opt/bookingly.cloud/deploy/bootstrap.sh
 ```
 
 Instala Node 22, PostgreSQL, Nginx y Certbot; crea la base con contraseña aleatoria; escribe
-el `.env`; carga las 45 fuentes; compila; levanta systemd; configura el proxy inverso; emite
+el `.env`; carga las 81 fuentes; compila; levanta systemd; configura el proxy inverso; emite
 el TLS e instala el atajo `bookingly-deploy`.
 
 Acepta por entorno: `DOMAIN`, `PORT`, `LLM_API_KEY`, `ADMIN_PASSWORD`, `SITE_NAME`.
