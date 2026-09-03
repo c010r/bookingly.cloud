@@ -118,10 +118,23 @@ const DESCUBRIMIENTO: Feed[] = [
   { name: "ZDNET · Open source", feed: "https://www.zdnet.com/rss/open-source/", site: "https://www.zdnet.com", lang: "en" },
   { name: "ZDNET · IA", feed: "https://www.zdnet.com/rss/artificial-intelligence/", site: "https://www.zdnet.com", lang: "en" },
   { name: "ZDNET · Seguridad", feed: "https://www.zdnet.com/rss/security/", site: "https://www.zdnet.com", lang: "en" },
+
+  // Tecnologia asiatica: cubre fabricantes, chips y companias chinas que los
+  // medios occidentales dan tarde o no dan. ITHome publica en chino; el
+  // redactor traduce, pero ojo, el detector de repetidas compara titulares y
+  // uno en chino no se parece a uno en ingles, asi que un duplicado suyo solo
+  // se caza despues de reescribirlo, gastando cupo. TechNode sirve su archivo
+  // entero en cada peticion, unas 2000 entradas: la comprobacion de antiguedad
+  // las descarta en memoria antes de tocar la base, pero deja el contador de
+  // caducadas muy ruidoso.
+  { name: "ITHome", feed: "https://www.ithome.com/rss", site: "https://www.ithome.com", lang: "zh" },
+  { name: "Pandaily", feed: "https://pandaily.com/feed/", site: "https://pandaily.com", lang: "en" },
+  { name: "TechNode", feed: "https://technode.com/feed/", site: "https://technode.com", lang: "en" },
 ];
 
-// Descartadas tras probarlas desde el servidor: Server Fault (403) y el RSS
-// crudo de Hacker News,
+// Descartadas tras probarlas desde el servidor: Server Fault (403), KrASIA
+// (su XML esta mal formado y rompe el analizador con "Invalid character in
+// entity name") y el RSS crudo de Hacker News,
 // que traeria la portada entera sin filtrar; ya esta hnrss con umbral de 250
 // puntos, que es la misma fuente pero quedandose solo con lo que destaca.
 
