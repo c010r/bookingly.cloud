@@ -111,10 +111,17 @@ const DESCUBRIMIENTO: Feed[] = [
   { name: "r/networking", feed: "https://www.reddit.com/r/networking/.rss", site: "https://www.reddit.com/r/networking/", lang: "en" },
   { name: "r/devops", feed: "https://www.reddit.com/r/devops/.rss", site: "https://www.reddit.com/r/devops/", lang: "en" },
   { name: "r/selfhosted", feed: "https://www.reddit.com/r/selfhosted/.rss", site: "https://www.reddit.com/r/selfhosted/", lang: "en" },
+
+  // ZDNET publica por tema en /rss/<tema>/, en Atom. Se cogen las cuatro que
+  // encajan y no la portada general, que arrastra bastante consumo.
+  { name: "ZDNET · Linux", feed: "https://www.zdnet.com/rss/linux/", site: "https://www.zdnet.com", lang: "en" },
+  { name: "ZDNET · Open source", feed: "https://www.zdnet.com/rss/open-source/", site: "https://www.zdnet.com", lang: "en" },
+  { name: "ZDNET · IA", feed: "https://www.zdnet.com/rss/artificial-intelligence/", site: "https://www.zdnet.com", lang: "en" },
+  { name: "ZDNET · Seguridad", feed: "https://www.zdnet.com/rss/security/", site: "https://www.zdnet.com", lang: "en" },
 ];
 
-// Descartadas tras probarlas desde el servidor: ZDNET (404 en su rss.xml y en
-// dos rutas alternativas), Server Fault (403) y el RSS crudo de Hacker News,
+// Descartadas tras probarlas desde el servidor: Server Fault (403) y el RSS
+// crudo de Hacker News,
 // que traeria la portada entera sin filtrar; ya esta hnrss con umbral de 250
 // puntos, que es la misma fuente pero quedandose solo con lo que destaca.
 
