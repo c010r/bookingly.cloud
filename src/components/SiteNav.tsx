@@ -21,29 +21,32 @@ export default async function SiteNav() {
        en las lineas que hagan falta, y en movil, donde envolver comeria media
        pantalla, se mantiene el desplazamiento pero con un degradado al borde
        que avisa de que hay mas. */
-    <div className="relative border-b border-line bg-bg">
+    <div className="relative border-b border-border-subtle bg-bg/95 backdrop-blur-xs">
       <nav
         aria-label="Secciones"
-        className="contenedor flex items-stretch gap-x-5 overflow-x-auto md:flex-wrap md:overflow-x-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="contenedor flex items-center gap-2 overflow-x-auto py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
+        <span className="hidden lg:inline text-[0.6875rem] font-bold uppercase tracking-wider text-fg-faint/80 shrink-0 mr-1">
+          Secciones:
+        </span>
         {activas.map((c) => (
           <Link
             key={c.slug}
             href={`/categoria/${c.slug}`}
-            className="etiqueta group flex shrink-0 items-baseline gap-1.5 border-b-2 border-transparent py-3.5 tracking-[0.08em] whitespace-nowrap text-fg-muted transition-colors hover:border-accent hover:text-fg"
+            className="group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-subtle bg-surface-2/60 px-3 py-1 text-xs font-medium text-fg-muted transition-all hover:border-accent hover:bg-surface hover:text-fg hover:shadow-xs"
           >
-            {c.name}
-            <span className="text-[0.625rem] font-medium tracking-normal text-fg-faint tabular-nums">
+            <span>{c.name}</span>
+            <span className="rounded-full bg-bg px-1.5 py-0.2 text-[0.625rem] font-semibold text-fg-faint tabular-nums border border-line/60 group-hover:text-accent group-hover:border-accent/30">
               {counts[c.slug]}
             </span>
           </Link>
         ))}
       </nav>
 
-      {/* El degradado solo tiene sentido donde la fila se desplaza. */}
+      {/* Degradado para indicar desplazamiento en móvil */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-bg to-transparent md:hidden"
+        className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-bg to-transparent md:hidden"
       />
     </div>
   );

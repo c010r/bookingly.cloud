@@ -23,27 +23,31 @@ export default async function CategoryPage({ params }: Params) {
   const seccion = CATEGORIES.find((c) => c.slug === slug);
 
   return (
-    <div className="contenedor">
-      {/* Cabecera de seccion: el nombre a cuerpo de cartel abre la pagina. */}
-      <header className="border-b-2 border-fg py-12 lg:py-16">
-        <p className="etiqueta text-accent">Seccion</p>
-        <h1 className="titular-xl mt-3">{categoryName(slug)}</h1>
+    <div className="contenedor pb-20">
+      {/* Cabecera de sección moderna */}
+      <header className="border-b border-border-subtle py-10 lg:py-14">
+        <span className="badge-pill bg-accent/10 text-accent font-bold">
+          Sección temática
+        </span>
+        <h1 className="font-display mt-3 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-fg">
+          {categoryName(slug)}
+        </h1>
         {seccion && (
-          <p className="entradilla mt-4 max-w-2xl text-lg text-fg-muted first-letter:uppercase">
+          <p className="font-serif mt-3 max-w-2xl text-lg text-fg-muted first-letter:uppercase">
             {seccion.hint}.
           </p>
         )}
-        <p className="meta mt-6 text-fg-faint">
-          {articles.length === 1 ? "1 noticia" : `${articles.length} noticias`}
+        <p className="meta mt-5 text-xs text-fg-faint font-mono">
+          {articles.length === 1 ? "1 noticia procesada" : `${articles.length} noticias procesadas`}
         </p>
       </header>
 
       {articles.length === 0 ? (
-        <div className="my-24 border-b-2 border-fg pb-20 text-center">
-          <p className="titular-l">Todavia no hay noticias en esta seccion.</p>
+        <div className="my-20 rounded-2xl border border-border-subtle bg-surface p-12 text-center shadow-xs">
+          <p className="font-display text-xl font-bold text-fg">Todavía no hay noticias en esta sección.</p>
         </div>
       ) : (
-        <div className="mt-12">
+        <div className="mt-10">
           <ArticleGrid articulos={articles} />
         </div>
       )}

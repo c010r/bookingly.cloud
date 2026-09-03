@@ -6,6 +6,8 @@ import { renderMarkdown, empiezaConSigla } from "@/lib/markdown";
 import ArticleGrid from "@/components/ArticleGrid";
 import SectionTitle from "@/components/SectionTitle";
 import ViewCounter from "@/components/ViewCounter";
+import ReadingProgress from "@/components/ReadingProgress";
+import ReadingActionBar from "@/components/ReadingActionBar";
 import { categoryName } from "@/lib/categories";
 import { formatDate, formatViews, isoDate } from "@/lib/format";
 import { env } from "@/lib/env";
@@ -58,58 +60,58 @@ export default async function ArticlePage({ params }: Params) {
   };
 
   return (
-    <article>
+    <article className="pb-20">
+      <ReadingProgress />
       <ViewCounter slug={article.slug} />
 
-      {/* Entrada: el titular manda y ocupa una columna mas ancha que el texto. */}
-      <header className="contenedor pt-12 pb-9 lg:pt-16">
+      {/* Entrada editorial */}
+      <header className="contenedor pt-10 pb-8 lg:pt-14">
         <div className="mx-auto max-w-[54rem]">
           <Link
             href={`/categoria/${article.category}`}
-            className="etiqueta inline-block bg-accent px-2 py-1 text-accent-fg transition-opacity hover:opacity-80"
+            className="badge-pill bg-accent text-accent-fg font-bold tracking-wide transition-opacity hover:opacity-90"
           >
             {categoryName(article.category)}
           </Link>
 
-          <h1 className="titular-xl mt-5">{article.title}</h1>
+          <h1 className="font-display mt-4 text-3xl sm:text-4xl lg:text-[3.25rem] font-black leading-[1.04] tracking-tight text-fg">
+            {article.title}
+          </h1>
 
           {article.dek && (
-            <p className="entradilla mt-6 max-w-[44rem] text-xl text-fg-muted sm:text-[1.4rem]">
+            <p className="font-serif mt-5 max-w-[46rem] text-lg sm:text-xl text-fg-muted leading-relaxed">
               {article.dek}
             </p>
           )}
 
-          <div className="meta mt-8 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t-2 border-fg pt-3.5 text-fg-faint">
+          <div className="meta mt-7 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border-subtle pt-4 text-xs text-fg-faint">
             <time dateTime={isoDate(article.published_at)}>
               {formatDate(article.published_at)}
             </time>
-            <span aria-hidden="true" className="text-fg-faint/50">
-              /
-            </span>
+            <span aria-hidden="true">/</span>
             <span>{article.reading_minutes} min de lectura</span>
-            <span aria-hidden="true" className="text-fg-faint/50">
-              /
+            <span aria-hidden="true">/</span>
+            <span className="font-medium text-fg-muted">
+              {extra > 0 ? `${extra + 1} fuentes contrastadas` : article.source_name}
             </span>
-            <span>{extra > 0 ? `${extra + 1} fuentes` : article.source_name}</span>
-            <span aria-hidden="true" className="text-fg-faint/50">
-              /
-            </span>
+            <span aria-hidden="true">/</span>
             <span>{formatViews(article.views)}</span>
           </div>
         </div>
       </header>
 
-      {/* Imagen de apertura a sangre: de borde a borde de la ventana. */}
+      {/* Imagen de apertura con estética moderna */}
       {article.image_url && (
-        <figure className="mb-10 border-y-2 border-fg bg-surface-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            // Varios CDN devuelven 403 si el referer es otro dominio; sin el sirven igual.
-            referrerPolicy="no-referrer"
-            src={article.image_url}
-            alt=""
-            className="max-h-[72vh] w-full object-cover"
-          />
+        <figure className="contenedor mb-12">
+          <div className="mx-auto max-w-[54rem] overflow-hidden rounded-2xl border border-border-subtle bg-surface-2 shadow-sm">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              referrerPolicy="no-referrer"
+              src={article.image_url}
+              alt=""
+              className="max-h-[65vh] w-full object-cover"
+            />
+          </div>
         </figure>
       )}
 
@@ -119,68 +121,90 @@ export default async function ArticlePage({ params }: Params) {
           dangerouslySetInnerHTML={{ __html: html }}
         />
 
-        {/* Procedencia: bloque de credito, con filete grueso arriba. */}
-        <aside className="mx-auto mt-14 max-w-[42rem] border-t-2 border-fg pt-5">
-          <p className="etiqueta text-accent">Fuentes</p>
-          <p className="entradilla mt-3 text-[0.95rem] leading-relaxed text-fg-muted">
+        {/* Transparencia Algorítmica & Fuentes */}
+        <aside
+          id="fuentes"
+          className="mx-auto mt-14 max-w-[42rem] rounded-2xl border border-border-subtle bg-surface-card p-6 shadow-xs"
+        >
+          <div className="flex items-center justify-between gap-4 border-b border-line pb-3.5">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-accent" />
+              <p className="font-sans text-xs font-bold uppercase tracking-wider text-fg">
+                Transparencia & Fuentes Originales
+              </p>
+            </div>
+            {article.quality_score && (
+              <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-[0.6875rem] font-bold text-accent font-mono">
+                Índice de Calidad: {article.quality_score}/100
+              </span>
+            )}
+          </div>
+
+          <p className="font-serif mt-4 text-[0.95rem] leading-relaxed text-fg-muted">
             {article.source_author ? (
               <>
-                Basado en el articulo de{" "}
-                <strong className="font-semibold text-fg">{article.source_author}</strong> en{" "}
-                <strong className="font-semibold text-fg">{article.source_name}</strong>:{" "}
+                Basado originalmente en la cobertura de{" "}
+                <strong className="font-semibold text-fg font-sans">{article.source_author}</strong> para{" "}
+                <strong className="font-semibold text-fg font-sans">{article.source_name}</strong>:{" "}
               </>
             ) : (
               <>
-                Basado en la informacion publicada por{" "}
-                <strong className="font-semibold text-fg">{article.source_name}</strong>:{" "}
+                Basado en el despacho informativo publicado por{" "}
+                <strong className="font-semibold text-fg font-sans">{article.source_name}</strong>:{" "}
               </>
             )}
             <a
               href={article.source_url}
               target="_blank"
               rel="noopener nofollow"
-              className="text-fg underline decoration-accent decoration-2 underline-offset-4 hover:text-accent"
+              className="inline-block text-accent font-sans font-medium underline underline-offset-4 hover:opacity-80"
             >
-              {article.source_title}
+              &ldquo;{article.source_title}&rdquo; ↗
             </a>
           </p>
 
           {extra > 0 && (
-            <>
-              <p className="entradilla mt-4 mb-1.5 text-[0.95rem] text-fg-muted">
-                Otros medios que cubrieron esta noticia:
+            <div className="mt-5 border-t border-line/60 pt-3.5">
+              <p className="font-sans text-xs font-semibold uppercase tracking-wider text-fg-faint mb-2">
+                Medios adicionales detectados y contrastados:
               </p>
-              <ul className="entradilla space-y-1.5 text-[0.95rem] text-fg-muted">
+              <ul className="space-y-2">
                 {article.extra_sources.map((s) => (
-                  <li key={s.url} className="border-l-2 border-line pl-3">
-                    <strong className="font-semibold text-fg">{s.name}</strong>:{" "}
+                  <li key={s.url} className="flex items-baseline gap-2 text-xs text-fg-muted">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
+                    <strong className="font-semibold text-fg font-sans">{s.name}:</strong>{" "}
                     <a
                       href={s.url}
                       target="_blank"
                       rel="noopener nofollow"
-                      className="text-fg underline decoration-accent decoration-2 underline-offset-4 hover:text-accent"
+                      className="text-fg-muted hover:text-accent underline underline-offset-2 truncate"
                     >
-                      {s.title}
+                      {s.title} ↗
                     </a>
                   </li>
                 ))}
               </ul>
-            </>
+            </div>
           )}
 
-          <p className="meta mt-5 text-fg-faint">
-            Texto reelaborado por la redaccion de {env.siteName}. Los datos y declaraciones
-            proceden de las fuentes originales enlazadas.
-          </p>
+          <div className="mt-5 rounded-xl bg-bg-soft/70 p-3 text-[0.72rem] text-fg-faint font-sans">
+            Curaduría y síntesis autónoma realizada por la redacción algorítmica de {env.siteName}. Los hechos y citas textuales provienen de las fuentes originales acreditadas.
+          </div>
         </aside>
 
         {related.length > 0 && (
-          <>
-            <SectionTitle>Relacionado</SectionTitle>
-            <ArticleGrid articulos={related} amplias={0} />
-          </>
+          <div className="mt-16">
+            <SectionTitle>Historias Relacionadas</SectionTitle>
+            <ArticleGrid articulos={related} amplias={0} permitirCambioVista={false} />
+          </div>
         )}
       </div>
+
+      <ReadingActionBar
+        slug={article.slug}
+        title={article.title}
+        readingMinutes={article.reading_minutes}
+      />
 
       <script
         type="application/ld+json"

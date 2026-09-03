@@ -99,6 +99,19 @@ export async function getBySlug(slug: string): Promise<Article | null> {
   );
 }
 
+/** Búsqueda rápida por titular, entradilla o categoría para el Command Menu (⌘K). */
+export async function searchPublished(q: string, limit = 8): Promise<Article[]> {
+  const patron = `%${q.trim()}%`;
+  return query<Article>(
+    `SELECT ${COLUMNS} FROM articles
+      WHERE status = 'published'
+        AND (title ILIKE $1 OR COALESCE(dek, '') ILIKE $1 OR category ILIKE $1)
+      ORDER BY published_at DESC
+      LIMIT $2`,
+    [patron, limit]
+  );
+}
+
 export async function getById(id: number): Promise<Article | null> {
   return queryOne<Article>(`SELECT ${COLUMNS} FROM articles WHERE id = $1`, [id]);
 }

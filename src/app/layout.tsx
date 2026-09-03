@@ -5,6 +5,8 @@ import { Archivo, Newsreader } from "next/font/google";
 import SiteNav from "@/components/SiteNav";
 import ThemeToggle from "@/components/ThemeToggle";
 import LastUpdate from "@/components/LastUpdate";
+import LiveRadarBar from "@/components/LiveRadarBar";
+import CommandMenu from "@/components/CommandMenu";
 import { env } from "@/lib/env";
 import "./globals.css";
 
@@ -59,27 +61,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH }} />
       </head>
       <body className="min-h-screen">
-        {/* Cabecera: filete grueso abajo, como la mancheta de un semanario. */}
-        <header className="sticky top-0 z-40 border-b-2 border-fg bg-bg">
+        {/* Barra superior de estado en vivo */}
+        <Suspense fallback={null}>
+          <LiveRadarBar />
+        </Suspense>
+
+        {/* Cabecera glassmorphic de alto impacto */}
+        <header className="sticky top-0 z-40 glass-header">
           <div className="contenedor flex h-16 items-center justify-between gap-4">
             <Link
               href="/"
-              className="flex items-baseline gap-2"
+              className="group flex items-baseline gap-2 transition-transform hover:scale-[1.01]"
               aria-label={`${env.siteName}, portada`}
             >
-              <span className="font-display text-[1.6rem] leading-none font-black tracking-[-0.055em]">
-                c<span className="text-accent">010</span>r
+              <span className="font-display text-[1.65rem] leading-none font-black tracking-[-0.055em]">
+                c<span className="text-accent transition-colors group-hover:text-accent-fg">010</span>r
               </span>
-              <span className="etiqueta text-fg-faint">News</span>
+              <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[0.6875rem] font-bold uppercase tracking-wider text-accent">
+                News
+              </span>
             </Link>
 
-            <nav className="flex items-center gap-5">
-              <Link
-                href="/"
-                className="etiqueta text-fg-muted transition-colors hover:text-accent"
-              >
-                Portada
-              </Link>
+            <nav className="flex items-center gap-3 sm:gap-4">
+              <CommandMenu />
               <ThemeToggle />
             </nav>
           </div>
@@ -91,10 +95,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <main>{children}</main>
 
-        <footer className="mt-24 border-t-2 border-fg bg-bg">
+        <footer className="mt-24 border-t border-border-subtle bg-surface-2/60">
           <div className="contenedor flex flex-col gap-8 py-12 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="font-display text-[2.6rem] leading-[0.85] font-black tracking-[-0.055em]">
+              <p className="font-display text-[2.2rem] leading-[0.85] font-black tracking-[-0.055em]">
                 c<span className="text-accent">010</span>r
                 <span className="text-fg-faint">News</span>
               </p>
@@ -108,7 +112,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <LastUpdate />
               </Suspense>
               <span>
-                © {new Date().getFullYear()} {env.siteName}
+                © {new Date().getFullYear()} {env.siteName} · Algorithmic Tech Journalism
               </span>
             </div>
           </div>

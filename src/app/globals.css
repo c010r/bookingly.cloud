@@ -12,26 +12,30 @@
    ========================================================================= */
 
 :root {
-  /* Fondos y superficies. En claro casi todo es papel blanco. */
-  --bg: #ffffff;
-  --bg-soft: #f4f3f0;
+  /* Fondos y superficies. En claro casi todo es papel blanco de alta pureza. */
+  --bg: #fafafa;
+  --bg-soft: #f4f4f5;
   --surface: #ffffff;
-  --surface-2: #f4f3f0;
+  --surface-2: #f4f4f5;
+  --surface-card: #ffffff;
+  --surface-glass: rgba(250, 250, 250, 0.82);
 
-  /* Filetes: el fino separa, el grueso estructura la pagina. */
-  --line: #dedcd6;
-  --line-strong: #12110f;
+  /* Filetes y bordes: micro-bordes refinados en lugar de alambres gruesos. */
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --line: #e4e4e7;
+  --line-strong: #18181b;
 
-  /* Tinta. */
-  --fg: #0d0c0b;
-  --fg-muted: #4a4844;
-  --fg-faint: #6d6a64;
+  /* Tinta: negros neutros de alto contraste. */
+  --fg: #09090b;
+  --fg-muted: #52525b;
+  --fg-faint: #71717a;
 
-  /* Unico acento: bermellon. 5,1:1 sobre blanco, cumple AA. */
-  --accent: #d42a15;
+  /* Unico acento: bermellón eléctrico de alta vibración. */
+  --accent: #ff381e;
   --accent-fg: #ffffff; /* tinta sobre relleno de acento */
+  --glow-accent: rgba(255, 56, 30, 0.18);
 
-  --danger: #b3261e;
+  --danger: #ef4444;
 
   color-scheme: light;
 }
@@ -39,22 +43,26 @@
 /* Oscuro automatico, salvo que el lector haya forzado el claro. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0a0a09;
-    --bg-soft: #131211;
-    --surface: #0a0a09;
-    --surface-2: #171614;
-    --line: #2c2a27;
-    --line-strong: #f2efe9;
+    --bg: #09090b;
+    --bg-soft: #121215;
+    --surface: #121215;
+    --surface-2: #18181b;
+    --surface-card: #141417;
+    --surface-glass: rgba(9, 9, 11, 0.82);
 
-    --fg: #f5f2ec;
-    --fg-muted: #ada9a1;
-    --fg-faint: #8b8780;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --line: #27272a;
+    --line-strong: #fafafa;
 
-    /* Sobre negro hace falta un rojo mas luminoso: 5,9:1. */
-    --accent: #ff4a2b;
-    --accent-fg: #0a0a09;
+    --fg: #fafafa;
+    --fg-muted: #a1a1aa;
+    --fg-faint: #71717a;
 
-    --danger: #ff6b5e;
+    --accent: #ff4d30;
+    --accent-fg: #09090b;
+    --glow-accent: rgba(255, 77, 48, 0.22);
+
+    --danger: #f87171;
 
     color-scheme: dark;
   }
@@ -62,21 +70,26 @@
 
 /* Oscuro forzado desde el conmutador. */
 :root[data-theme="dark"] {
-  --bg: #0a0a09;
-  --bg-soft: #131211;
-  --surface: #0a0a09;
-  --surface-2: #171614;
-  --line: #2c2a27;
-  --line-strong: #f2efe9;
+  --bg: #09090b;
+  --bg-soft: #121215;
+  --surface: #121215;
+  --surface-2: #18181b;
+  --surface-card: #141417;
+  --surface-glass: rgba(9, 9, 11, 0.82);
 
-  --fg: #f5f2ec;
-  --fg-muted: #ada9a1;
-  --fg-faint: #8b8780;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --line: #27272a;
+  --line-strong: #fafafa;
 
-  --accent: #ff4a2b;
-  --accent-fg: #0a0a09;
+  --fg: #fafafa;
+  --fg-muted: #a1a1aa;
+  --fg-faint: #71717a;
 
-  --danger: #ff6b5e;
+  --accent: #ff4d30;
+  --accent-fg: #09090b;
+  --glow-accent: rgba(255, 77, 48, 0.22);
+
+  --danger: #f87171;
 
   color-scheme: dark;
 }
@@ -86,6 +99,9 @@
   --color-bg-soft: var(--bg-soft);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
+  --color-surface-card: var(--surface-card);
+  --color-surface-glass: var(--surface-glass);
+  --color-border-subtle: var(--border-subtle);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
 
@@ -95,6 +111,7 @@
 
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
+  --color-glow-accent: var(--glow-accent);
 
   --color-danger: var(--danger);
 
@@ -524,4 +541,68 @@
   :root:not([data-theme="light"]) .icon-moon {
     display: block;
   }
+}
+
+/* =========================================================================
+   Utilidades Modernas: Glassmorphism, Micro-elevación, Bento & Pulso
+   ========================================================================= */
+
+.glass-header {
+  background-color: var(--surface-glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.glass-card {
+  background-color: var(--surface-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+}
+
+.card-modern {
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.75rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-modern:hover {
+  border-color: rgba(255, 56, 30, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -10px var(--glow-accent);
+}
+
+@keyframes pulso-radar {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 56, 30, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(255, 56, 30, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 56, 30, 0);
+  }
+}
+
+.pulso-radar {
+  animation: pulso-radar 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* Scrollbar sutil para listas horizontales */
+.scroll-sutil {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-subtle) transparent;
+}
+.scroll-sutil::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+}
+.scroll-sutil::-webkit-scrollbar-thumb {
+  background-color: var(--border-subtle);
+  border-radius: 9999px;
 }
