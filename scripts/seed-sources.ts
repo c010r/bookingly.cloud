@@ -97,6 +97,7 @@ const DESCUBRIMIENTO: Feed[] = [
   { name: "InfoQ", feed: "https://feed.infoq.com/", site: "https://www.infoq.com", lang: "en" },
   { name: "Changelog", feed: "https://changelog.com/feed", site: "https://changelog.com", lang: "en" },
   { name: "Console.dev", feed: "https://console.dev/rss.xml", site: "https://console.dev", lang: "en" },
+  { name: "KDnuggets", feed: "https://www.kdnuggets.com/feed", site: "https://www.kdnuggets.com", lang: "en" },
   { name: "The Register", feed: "https://www.theregister.com/headlines.atom", site: "https://www.theregister.com", lang: "en" },
   { name: "Red Hat Enable Sysadmin", feed: "https://www.redhat.com/sysadmin/rss.xml", site: "https://www.redhat.com/sysadmin", lang: "en" },
   { name: "Dev.to", feed: "https://dev.to/feed", site: "https://dev.to", lang: "en" },
