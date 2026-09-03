@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { countPublished } from "@/lib/repo";
+import TeclaAtajo from "./TeclaAtajo";
 
 export default async function LiveRadarBar() {
   let totalNoticias = 0;
@@ -29,7 +30,7 @@ export default async function LiveRadarBar() {
         {/* Lado derecho: atajo de búsqueda y enlace directo */}
         <div className="flex shrink-0 items-center gap-3 text-fg-faint text-[0.72rem]">
           <span className="hidden md:inline font-mono">
-            Presiona <kbd className="rounded border border-line bg-surface px-1 py-0.5 text-[0.65rem] font-semibold text-fg shadow-xs">⌘K</kbd> para buscar
+            Presiona <TeclaAtajo className="rounded border border-line bg-surface px-1 py-0.5 text-[0.65rem] font-semibold text-fg shadow-xs" /> para buscar
           </span>
           <Link
             href="/feed.xml"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useTransition } from "react";
+import TeclaAtajo from "./TeclaAtajo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { categoryName } from "@/lib/categories";
@@ -122,9 +123,7 @@ export default function CommandMenu() {
         </svg>
         <span className="hidden sm:inline">Buscar noticias...</span>
         <span className="sm:hidden">Buscar</span>
-        <kbd className="hidden sm:inline rounded bg-bg px-1.5 py-0.5 font-mono text-[0.65rem] font-medium text-fg-faint border border-line">
-          ⌘K
-        </kbd>
+        <TeclaAtajo className="hidden sm:inline rounded bg-bg px-1.5 py-0.5 font-mono text-[0.65rem] font-medium text-fg-faint border border-line" />
       </button>
 
       {/* Modal Backdrop & Command Palette */}
