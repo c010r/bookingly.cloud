@@ -19,7 +19,7 @@ export default async function LiveRadarBar() {
             <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
           </span>
           <p className="truncate font-sans font-medium text-fg-muted tracking-tight text-[0.72rem]">
-            <span className="font-bold text-fg">RADAR c010r:</span>{" "}
+            <span className="font-bold text-fg">RADAR Bookingly:</span>{" "}
             <span className="hidden sm:inline">Monitoreo continuo de 45 fuentes tech</span>
             <span className="mx-2 text-fg-faint/40 hidden sm:inline">/</span>
             <span>{totalNoticias} noticias analizadas con IA</span>

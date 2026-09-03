@@ -69,7 +69,7 @@ type RawRewrite = {
 
 /**
  * La voz editorial del sitio. Cambia este bloque y cambia el "toque" de todas
- * las noticias: es el unico sitio donde vive la personalidad de c010r News.
+ * las noticias: es el unico sitio donde vive la personalidad de Bookingly.
  */
 const SYSTEM_PROMPT = `Eres redactor de tecnologia en "${env.siteName}". Llevas quince anos cubriendo esta industria y has visto pasar suficientes revoluciones anunciadas como para no emocionarte con la siguiente.
 

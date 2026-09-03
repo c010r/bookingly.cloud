@@ -39,7 +39,7 @@ const parser = new Parser({
     // Varios medios (Digital Trends entre ellos) devuelven una pagina de
     // bloqueo a los user-agent que no parecen un navegador.
     "user-agent":
-      "Mozilla/5.0 (compatible; c010rNewsBot/1.0; +https://bookingly.cloud)",
+      "Mozilla/5.0 (compatible; BookinglyBot/1.0; +https://bookingly.cloud)",
     accept: "application/rss+xml, application/atom+xml, application/xml;q=0.9, */*;q=0.8",
   },
   customFields: { item: [["media:content", "mediaContent", { keepArray: false }]] },

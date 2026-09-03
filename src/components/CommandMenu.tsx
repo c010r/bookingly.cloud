@@ -248,7 +248,7 @@ export default function CommandMenu() {
             {/* Pie de navegación rápida */}
             <div className="flex items-center justify-between border-t border-line bg-bg-soft/50 px-4 py-2 text-[0.7rem] text-fg-faint">
               <span>Navega con ↑ ↓ y presiona Enter</span>
-              <span>c010r News Search Engine</span>
+              <span>Bookingly Search Engine</span>
             </div>
           </div>
         </div>

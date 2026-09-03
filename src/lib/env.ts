@@ -145,7 +145,7 @@ export const env = {
     const v = process.env.AUTO_PUBLISH_MIN_SCORE;
     return v === undefined || v === "" ? 0 : Number(v);
   },
-  siteName: process.env.SITE_NAME || "c010r News",
+  siteName: process.env.SITE_NAME || "Bookingly",
   siteUrl: (process.env.SITE_URL || "http://localhost:3000").replace(/\/$/, ""),
   siteDescription:
     process.env.SITE_DESCRIPTION || "Noticias de tecnologia, reescritas con criterio.",

@@ -7,6 +7,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import LastUpdate from "@/components/LastUpdate";
 import LiveRadarBar from "@/components/LiveRadarBar";
 import CommandMenu from "@/components/CommandMenu";
+import BookinglyLogo from "@/components/BookinglyLogo";
 import { env } from "@/lib/env";
 import "./globals.css";
 
@@ -71,15 +72,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="contenedor flex h-16 items-center justify-between gap-4">
             <Link
               href="/"
-              className="group flex items-baseline gap-2 transition-transform hover:scale-[1.01]"
+              className="group flex items-center transition-transform hover:scale-[1.01]"
               aria-label={`${env.siteName}, portada`}
             >
-              <span className="font-display text-[1.65rem] leading-none font-black tracking-[-0.055em]">
-                c<span className="text-accent transition-colors group-hover:text-accent-fg">010</span>r
-              </span>
-              <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[0.6875rem] font-bold uppercase tracking-wider text-accent">
-                News
-              </span>
+              <BookinglyLogo size="md" />
             </Link>
 
             <nav className="flex items-center gap-3 sm:gap-4">
@@ -98,10 +94,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="mt-24 border-t border-border-subtle bg-surface-2/60">
           <div className="contenedor flex flex-col gap-8 py-12 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="font-display text-[2.2rem] leading-[0.85] font-black tracking-[-0.055em]">
-                c<span className="text-accent">010</span>r
-                <span className="text-fg-faint">News</span>
-              </p>
+              <BookinglyLogo size="lg" />
               <p className="entradilla mt-3 max-w-sm text-[0.9rem] text-fg-muted">
                 {env.siteDescription}
               </p>
