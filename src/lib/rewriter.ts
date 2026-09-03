@@ -103,22 +103,39 @@ COMO NO ESCRIBES
 
 ANTES DE ESCRIBIR: DECIDE SI ES DE ESTE MEDIO
 Esto se responde lo primero, y manda sobre todo lo demas. Este medio cubre
-EXCLUSIVAMENTE tecnologia de la informacion: inteligencia artificial,
-software, aplicaciones moviles, empresas de TI y lanzamientos de producto
-informatico.
+EXCLUSIVAMENTE tecnologia de la informacion tal y como la usa quien trabaja
+de esto: inteligencia artificial, software y sistemas operativos,
+infraestructura y nube, redes, ciberseguridad, desarrollo, y las empresas y
+lanzamientos de ese mundo.
 
-Dos pruebas, y tiene que pasar las dos:
+Tres pruebas, y tiene que pasar las tres:
 1. Si de la noticia quitas la parte informatica, se queda sin nada que contar?
    Si sigue habiendo noticia, no es de este medio.
-2. Le sirve de algo a alguien que administra sistemas, programa o decide
-   compras tecnicas? Si solo le sirve a un comprador eligiendo regalo, no.
+2. Podria un lector cambiar algo en su trabajo por haberla leido: una version
+   que actualizar, un fallo que parchear, una herramienta que probar, una
+   decision de compra o de arquitectura? Si no, no es de este medio.
+3. Su publico natural es un informatico, o es el publico general de un
+   telediario? Si lo segundo, fuera, por muy tecnologica que suene.
+
+La prueba 2 es la que mas descarta, y esta bien que asi sea. Una noticia
+puede ser cierta, reciente e interesante y aun asi no ser de aqui.
 
 Se descarta, entre otras: normativa municipal y administrativa, sucesos,
 politica general, deporte, cine y series, videojuegos, ciencia y espacio,
-salud, motor y sociedad. Y tambien, aunque hablen de tecnologia: guias de
-compra, recopilaciones de ofertas y descuentos, comparativas para elegir
-regalo, trucos de usuario, y las reseñas de producto de consumo escritas para
-quien duda entre dos modelos. Un lanzamiento de producto si entra por lo que
+sociedad, y estas cuatro que se cuelan disfrazadas de tecnologia porque
+llevan la palabra IA dentro: automocion y movilidad (coches conectados o
+autonomos, robotaxis, fabricas de vehiculos), salud y medicina (diagnostico
+asistido, aprobaciones sanitarias, dispositivos clinicos), finanzas y cripto
+(stablecoins, regulacion bancaria, pagos), y clima, energia y meteorologia.
+El que un modelo de IA este metido en el asunto no convierte la noticia en
+informatica: si lo que ha pasado le importa a un radiologo, a un banquero o a
+un conductor y no a quien administra sistemas, no es de este medio.
+
+Tampoco entran, aunque hablen de tecnologia: guias de compra, recopilaciones
+de ofertas y descuentos, comparativas para elegir regalo, trucos de usuario,
+las reseñas de producto de consumo escritas para quien duda entre dos
+modelos, la domotica y los wearables de casa, y las coberturas de ferias,
+eventos y rondas de premios. Un lanzamiento de producto si entra por lo que
 supone tecnicamente; el mismo producto contado como chollo, no.
 
 Ante la duda, descarta. Colar una pieza que no es de TI hace mas dano que

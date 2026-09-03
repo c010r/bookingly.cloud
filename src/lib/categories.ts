@@ -6,7 +6,7 @@ export const CATEGORIES = [
   { slug: "ia", name: "Inteligencia artificial", hint: "modelos, LLM, IA generativa, chips de IA, investigacion" },
   { slug: "infraestructura", name: "Infraestructura", hint: "cloud, contenedores, kubernetes, bases de datos, servidores, devops, observabilidad" },
   { slug: "software", name: "Software", hint: "sistemas operativos, lenguajes, frameworks, open source, herramientas de desarrollo" },
-  { slug: "hardware", name: "Hardware", hint: "lanzamientos de producto, chips, moviles, ordenadores, componentes" },
+  { slug: "hardware", name: "Hardware", hint: "chips y CPU/GPU, servidores, almacenamiento, componentes y equipo de trabajo; no gadgets de consumo" },
   { slug: "ciberseguridad", name: "Ciberseguridad", hint: "brechas, malware, vulnerabilidades, privacidad, cifrado" },
   { slug: "internet", name: "Redes y nube", hint: "conectividad, CDN, proveedores cloud, plataformas, navegadores" },
   { slug: "negocios", name: "Empresas y startups", hint: "companias de TI, financiacion, adquisiciones, resultados, empleo tech" },

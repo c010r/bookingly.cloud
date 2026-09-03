@@ -256,6 +256,21 @@ export async function addSource(
   );
 }
 
+/**
+ * Apaga una fuente por su URL, sin borrarla. Se usa para las que se retiran de
+ * la linea editorial: borrar la fila dejaria sin atribucion a los articulos que
+ * ya publico, porque source_id se pone a NULL en cascada.
+ */
+export async function deactivateSource(feedUrl: string): Promise<boolean> {
+  const filas = await query<{ id: number }>(
+    `UPDATE sources SET active = FALSE
+      WHERE feed_url = $1 AND active = TRUE
+      RETURNING id`,
+    [feedUrl]
+  );
+  return filas.length > 0;
+}
+
 export async function toggleSource(id: number): Promise<void> {
   await query(`UPDATE sources SET active = NOT active WHERE id = $1`, [id]);
 }

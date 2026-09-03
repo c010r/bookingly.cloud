@@ -5,7 +5,7 @@
  *   npm run db:seed -- --check  -> ademas comprueba que cada feed responde
  */
 import "dotenv/config";
-import { addSource } from "../src/lib/repo";
+import { addSource, deactivateSource } from "../src/lib/repo";
 import { closePool } from "../src/lib/db";
 import { fetchFeed } from "../src/lib/ingest";
 
@@ -16,12 +16,7 @@ const EN_GENERAL: Feed[] = [
   { name: "Ars Technica", feed: "https://feeds.arstechnica.com/arstechnica/index", site: "https://arstechnica.com", lang: "en" },
   { name: "The Verge", feed: "https://www.theverge.com/rss/index.xml", site: "https://www.theverge.com", lang: "en" },
   { name: "TechCrunch", feed: "https://techcrunch.com/feed/", site: "https://techcrunch.com", lang: "en" },
-  { name: "Engadget", feed: "https://www.engadget.com/rss.xml", site: "https://www.engadget.com", lang: "en" },
   { name: "Wired", feed: "https://www.wired.com/feed/rss", site: "https://www.wired.com", lang: "en" },
-  { name: "Gizmodo", feed: "https://gizmodo.com/rss", site: "https://gizmodo.com", lang: "en" },
-  { name: "CNET", feed: "https://www.cnet.com/rss/news/", site: "https://www.cnet.com", lang: "en" },
-  { name: "TechRadar", feed: "https://www.techradar.com/rss", site: "https://www.techradar.com", lang: "en" },
-  { name: "Digital Trends", feed: "https://www.digitaltrends.com/feed/", site: "https://www.digitaltrends.com", lang: "en" },
   { name: "The Next Web", feed: "https://thenextweb.com/feed", site: "https://thenextweb.com", lang: "en" },
   { name: "VentureBeat", feed: "https://venturebeat.com/feed/", site: "https://venturebeat.com", lang: "en" },
   { name: "MIT Technology Review", feed: "https://www.technologyreview.com/feed/", site: "https://www.technologyreview.com", lang: "en" },
@@ -50,13 +45,8 @@ const EN_NICHE: Feed[] = [
   { name: "HotHardware", feed: "https://hothardware.com/rss/news", site: "https://hothardware.com", lang: "en" },
   { name: "ServeTheHome", feed: "https://www.servethehome.com/feed/", site: "https://www.servethehome.com", lang: "en" },
   { name: "Phoronix", feed: "https://www.phoronix.com/rss.php", site: "https://www.phoronix.com", lang: "en" },
-  { name: "9to5Mac", feed: "https://9to5mac.com/feed/", site: "https://9to5mac.com", lang: "en" },
-  { name: "9to5Google", feed: "https://9to5google.com/feed/", site: "https://9to5google.com", lang: "en" },
-  { name: "Android Police", feed: "https://www.androidpolice.com/feed/", site: "https://www.androidpolice.com", lang: "en" },
   { name: "GitHub Blog", feed: "https://github.blog/feed/", site: "https://github.blog", lang: "en" },
   { name: "Stack Overflow Blog", feed: "https://stackoverflow.blog/feed/", site: "https://stackoverflow.blog", lang: "en" },
-  { name: "Eurogamer", feed: "https://www.eurogamer.net/feed", site: "https://www.eurogamer.net", lang: "en" },
-  { name: "Polygon", feed: "https://www.polygon.com/rss/index.xml", site: "https://www.polygon.com", lang: "en" },
 ];
 
 /** IA: el tema con mas volumen de noticias, con seccion propia en el sitio. */
@@ -144,17 +134,44 @@ const DESCUBRIMIENTO: Feed[] = [
 
 /** Medios en espanol: aportan contexto local y vocabulario natural. */
 const ES: Feed[] = [
-  { name: "Xataka", feed: "https://www.xataka.com/feedburner.xml", site: "https://www.xataka.com", lang: "es" },
   { name: "Genbeta", feed: "https://www.genbeta.com/feedburner.xml", site: "https://www.genbeta.com", lang: "es" },
-  { name: "Xataka Movil", feed: "https://www.xatakamovil.com/feedburner.xml", site: "https://www.xatakamovil.com", lang: "es" },
-  { name: "Hipertextual", feed: "https://hipertextual.com/feed", site: "https://hipertextual.com", lang: "es" },
-  { name: "Applesfera", feed: "https://www.applesfera.com/feedburner.xml", site: "https://www.applesfera.com", lang: "es" },
-  { name: "El Diario · Tecnologia", feed: "https://www.eldiario.es/rss/tecnologia/", site: "https://www.eldiario.es/tecnologia/", lang: "es" },
-  { name: "Xataka Android", feed: "https://www.xatakandroid.com/feedburner.xml", site: "https://www.xatakandroid.com", lang: "es" },
-  { name: "ADSLZone", feed: "https://www.adslzone.net/feed/", site: "https://www.adslzone.net", lang: "es" },
-  { name: "Computer Hoy", feed: "https://computerhoy.20minutos.es/rss", site: "https://computerhoy.20minutos.es", lang: "es" },
-  { name: "Omicrono", feed: "https://www.elespanol.com/rss/omicrono/", site: "https://www.elespanol.com/omicrono/", lang: "es" },
-  { name: "Vida Extra", feed: "https://www.vidaextra.com/feedburner.xml", site: "https://www.vidaextra.com", lang: "es" },
+];
+
+/**
+ * Fuentes retiradas de la linea editorial. El medio se lee para trabajar, no
+ * para comprar: se van las de consumo, videojuegos y divulgacion generalista,
+ * que traian producto de tienda, motor, salud y sociedad. Filtrarlas con el
+ * modelo funcionaba a medias y ademas costaba cupo rechazar lo que no deberia
+ * haber entrado nunca.
+ *
+ * Se apagan, no se borran: la fila sigue ahi y los articulos que ya publicaron
+ * conservan su atribucion. Ojo, esto se aplica en cada despliegue, asi que si
+ * se reactiva una desde /admin/fuentes volvera a apagarse sola; para readmitir
+ * una de verdad hay que sacarla de esta lista.
+ */
+const RETIRADAS: string[] = [
+  "https://www.engadget.com/rss.xml",
+  "https://gizmodo.com/rss",
+  "https://www.cnet.com/rss/news/",
+  "https://www.techradar.com/rss",
+  "https://www.digitaltrends.com/feed/",
+  "https://9to5mac.com/feed/",
+  "https://9to5google.com/feed/",
+  "https://www.androidpolice.com/feed/",
+  "https://www.eurogamer.net/feed",
+  "https://www.polygon.com/rss/index.xml",
+  "https://www.xataka.com/feedburner.xml",
+  "https://www.xatakamovil.com/feedburner.xml",
+  "https://hipertextual.com/feed",
+  "https://www.applesfera.com/feedburner.xml",
+  "https://www.eldiario.es/rss/tecnologia/",
+  "https://www.xatakandroid.com/feedburner.xml",
+  "https://www.adslzone.net/feed/",
+  "https://computerhoy.20minutos.es/rss",
+  "https://www.elespanol.com/rss/omicrono/",
+  "https://www.vidaextra.com/feedburner.xml",
+  // Product Hunt: sustituida por BetaList, pero su fila sigue en la base.
+  "https://api.producthunt.com/v2/api/graphql",
 ];
 
 const ALL = [...EN_GENERAL, ...EN_COMMUNITY, ...EN_NICHE, ...IA, ...DESCUBRIMIENTO, ...ES];
@@ -186,6 +203,15 @@ for (const f of ALL) {
   }
 }
 
+let apagadas = 0;
+for (const url of RETIRADAS) {
+  if (await deactivateSource(url)) {
+    apagadas++;
+    console.log(`fuera  ${url}`);
+  }
+}
+
 console.log(`\n${ALL.length} fuentes cargadas.`);
+if (apagadas) console.log(`${apagadas} retiradas de la linea editorial.`);
 if (!check) console.log("Ejecuta 'npm run db:seed -- --check' para verificar que todas responden.");
 await closePool();
