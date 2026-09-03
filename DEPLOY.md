@@ -12,7 +12,7 @@ git push ──► GitHub Actions verifica (tipos, tests, build)
               ssh bookingly && bookingly-deploy
                      │
                      ▼
-              git pull, npm ci, migraciones, build, restart
+              git pull, npm ci, migraciones, fuentes, build, restart
               (si algo falla, vuelve solo al commit anterior)
 ```
 
@@ -24,9 +24,9 @@ bookingly-deploy
 ```
 
 Eso es todo. El script hace `git fetch` + `reset --hard origin/main`, instala dependencias,
-aplica migraciones, compila y reinicia el servicio. Espera a que la aplicación responda antes
-de darlo por bueno, y **si cualquier paso falla vuelve automáticamente al commit anterior**
-y reinicia con la versión que funcionaba.
+aplica migraciones, siembra las fuentes nuevas, compila y reinicia el servicio. Espera a que
+la aplicación responda antes de darlo por bueno, y **si cualquier paso falla vuelve
+automáticamente al commit anterior** y reinicia con la versión que funcionaba.
 
 Otros usos del mismo comando:
 

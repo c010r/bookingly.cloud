@@ -74,9 +74,6 @@ const IA: Feed[] = [
 
 /** Descubrimiento: producto nuevo y proyectos que despegan. */
 const DESCUBRIMIENTO: Feed[] = [
-  // Por API: el RSS publico solo trae el nombre del producto, sin descripcion,
-  // y las fichas responden 403. Necesita PRODUCTHUNT_TOKEN en el .env.
-  { name: "Product Hunt", feed: "https://api.producthunt.com/v2/api/graphql", site: "https://www.producthunt.com", lang: "en", kind: "producthunt" },
   // No es un feed: se consulta la API de busqueda de GitHub. La URL queda
   // como identificador, porque feed_url es la clave unica de la tabla.
   { name: "GitHub en alza", feed: "https://github.com/trending", site: "https://github.com", lang: "en", kind: "github" },
@@ -88,6 +85,12 @@ const DESCUBRIMIENTO: Feed[] = [
   { name: "Show HN", feed: "https://hnrss.org/show?points=20", site: "https://news.ycombinator.com/show", lang: "en" },
   { name: "Launch HN", feed: "https://hnrss.org/newest?q=Launch+HN", site: "https://news.ycombinator.com", lang: "en" },
   { name: "AlternativeTo", feed: "https://alternativeto.net/news/feed/", site: "https://alternativeto.net", lang: "en" },
+  // Sustituye a Product Hunt, que exigia credenciales de API y nunca trajo
+  // nada. Sale del catalogo de launchdirectories.com y es la unica alternativa
+  // de las 19 que alli figuran con un feed util: medido desde el lector de la
+  // aplicacion, 25 entradas y un parrafo real por producto (media de 494
+  // caracteres, minimo 251), frente al eslogan de una linea de Product Hunt.
+  { name: "BetaList", feed: "https://feeds.feedburner.com/BetaList", site: "https://betalist.com", lang: "en" },
 
   // Publicaciones para profesionales de TI: infraestructura, kernel,
   // arquitectura y herramientas. Es el material que le sirve a quien despliega

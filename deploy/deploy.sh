@@ -64,6 +64,14 @@ as_app npm ci --no-audit --no-fund
 say "Migraciones"
 as_app npm run db:migrate
 
+# Las fuentes nuevas viven en scripts/seed-sources.ts, pero la ingesta lee la
+# tabla 'sources'. Sin este paso, anadir un feed al repositorio no lo pone en
+# produccion: hay que acordarse de sembrar a mano, y no se acuerda nadie.
+# Es seguro repetirlo porque el upsert solo pisa nombre y tipo; el 'active' de
+# una fila existente no se toca, asi que lo que se apago a mano sigue apagado.
+say "Fuentes"
+as_app npm run db:seed
+
 say "Compilacion"
 as_app npm run build
 
