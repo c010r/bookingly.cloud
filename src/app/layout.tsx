@@ -5,7 +5,6 @@ import { Archivo, Newsreader } from "next/font/google";
 import SiteNav from "@/components/SiteNav";
 import ThemeToggle from "@/components/ThemeToggle";
 import LastUpdate from "@/components/LastUpdate";
-import LiveRadarBar from "@/components/LiveRadarBar";
 import CommandMenu from "@/components/CommandMenu";
 import BookinglyLogo from "@/components/BookinglyLogo";
 import { env } from "@/lib/env";
@@ -62,11 +61,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH }} />
       </head>
       <body className="min-h-screen">
-        {/* Barra superior de estado en vivo */}
-        <Suspense fallback={null}>
-          <LiveRadarBar />
-        </Suspense>
-
         {/* Cabecera glassmorphic de alto impacto */}
         <header className="sticky top-0 z-40 glass-header">
           <div className="contenedor flex h-16 items-center justify-between gap-4">
@@ -80,6 +74,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             <nav className="flex items-center gap-3 sm:gap-4">
               <CommandMenu />
+              {/* El <link rel="alternate"> del head solo lo ven los lectores
+                  de feeds; esto es para quien busca el RSS con los ojos. */}
+              <a
+                href="/feed.xml"
+                title="Suscripcion RSS"
+                aria-label="Suscripcion RSS"
+                className="grid h-9 w-9 place-items-center rounded-full border border-line bg-surface text-fg-muted transition-all hover:border-accent hover:bg-accent hover:text-accent-fg hover:shadow-sm"
+              >
+                <svg
+                  className="h-[15px] w-[15px]"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                >
+                  <path d="M4 11a9 9 0 0 1 9 9" />
+                  <path d="M4 4a16 16 0 0 1 16 16" />
+                  <circle cx="5" cy="19" r="1.4" fill="currentColor" stroke="none" />
+                </svg>
+              </a>
               <ThemeToggle />
             </nav>
           </div>
