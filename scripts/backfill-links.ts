@@ -16,6 +16,7 @@
  *   npx tsx scripts/backfill-links.ts --max=20    solo las 20 mas recientes
  *   npx tsx scripts/backfill-links.ts --dry       solo informa, no escribe
  *   npx tsx scripts/backfill-links.ts --todas     tambien las que ya tienen
+ *   npx tsx scripts/backfill-links.ts --slug=x    solo esa noticia
  */
 import "dotenv/config";
 import { extract } from "@extractus/article-extractor";
@@ -27,6 +28,14 @@ const flag = (n: string) => args.find((a) => a.startsWith(`--${n}=`))?.split("="
 const max = Number(flag("max") || 500);
 const dry = args.includes("--dry");
 const todas = args.includes("--todas");
+const slug = flag("slug");
+
+// Con --slug manda el slug: se rellena esa aunque ya tenga enlaces.
+const filtro = slug
+  ? "WHERE slug = $2"
+  : todas
+    ? ""
+    : "WHERE jsonb_array_length(links) = 0";
 
 const pendientes = await query<{
   id: number;
@@ -35,10 +44,10 @@ const pendientes = await query<{
 }>(
   `SELECT id, title, source_url
      FROM articles
-    ${todas ? "" : "WHERE jsonb_array_length(links) = 0"}
+    ${filtro}
     ORDER BY published_at DESC NULLS LAST
     LIMIT $1`,
-  [max]
+  slug ? [max, slug] : [max]
 );
 
 console.log(`${pendientes.length} articulos por revisar.\n`);

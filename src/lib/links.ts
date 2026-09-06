@@ -39,7 +39,7 @@ const HOSTS_RUIDO = new Set([
 
 /** Secciones de navegacion del propio medio: no son la noticia. */
 const RUTAS_RUIDO =
-  /^\/(tags?|topics?|categor(y|ia|ias|ies)|author|autor|autores|search|buscar|login|signin|sign-in|signup|register|subscribe|newsletter|privacy|privacidad|terms|terminos|cookies?|about|acerca|contact|contacto|feeds?|rss|amp|sitemap|advertise|publicidad|jobs|careers|shop|store)(\/|$)/i;
+  /^\/(tags?|topics?|categor(y|ia|ias|ies)|author|autor|autores|search|buscar|login|signin|sign-in|signup|register|subscribe|newsletter|privacy|privacidad|terms|terminos|cookies?|about|acerca|contact|contacto|feeds?|rss|amp|sitemap|advertise|publicidad|jobs|careers|shop|store|preferences|preferencias|settings|ajustes|account|cuenta|profile|perfil)(\/|$)/i;
 
 /** Patrocinio y papeleo del repositorio: ni es la noticia ni se lee. */
 const RUTAS_SIN_VALOR = /\/(sponsors?|donate|donaciones)(\/|$)|\/(LICENSE|COPYING|NOTICE|CHANGELOG)(\.[a-z]+)?$/i;
@@ -209,6 +209,10 @@ function etiquetar(url: string, ancla: string): string {
   // "provided here"). Como titulo de una lista de enlaces eso no se sostiene:
   // si empieza en minuscula y son varias palabras, es prosa, no una etiqueta.
   if (/^\p{Ll}/u.test(t) && /\s/.test(t)) return etiquetaPorDefecto(url);
+  // Y una frase entera tampoco cabe: cortada a los 80 queda partida por la
+  // mitad ("Mantis, an AI-agent framework designed to automate the software
+  // vulnerability li"), que se lee peor que el dominio.
+  if (t.length > 70) return etiquetaPorDefecto(url);
   // Un ancla que solo repite el sitio ("GitHub", "npm") no dice que hay ahi;
   // la etiqueta derivada si: "Repositorio en GitHub: owner/repo".
   try {
@@ -268,17 +272,38 @@ export function extraerEnlaces(html: string, urlOrigen: string, max = 6): Enlace
     });
   }
 
-  const porHost = new Map<string, number>();
+  const porRecurso = new Map<string, number>();
+  const conPaginaInterna = new Set<string>();
   const salida: Enlace[] = [];
+
   for (const c of candidatos.sort((a, b) => b.puntos - a.puntos)) {
-    const host = new URL(c.enlace.url).hostname;
-    const n = porHost.get(host) ?? 0;
+    const u = new URL(c.enlace.url);
+    const n = porRecurso.get(recurso(u)) ?? 0;
     if (n >= 2) continue;
-    porHost.set(host, n + 1);
+    // La portada de un dominio del que ya enlazamos una pagina concreta no
+    // anade nada: "sandstorm.io" dos veces, una a la home y otra al articulo.
+    const raiz = u.pathname === "/" || u.pathname === "";
+    if (raiz && conPaginaInterna.has(hostLimpio(u))) continue;
+    if (!raiz) conPaginaInterna.add(hostLimpio(u));
+
+    porRecurso.set(recurso(u), n + 1);
     salida.push(c.enlace);
     if (salida.length >= max) break;
   }
   return salida;
+}
+
+/**
+ * Con que recurso se topa el cupo. En una forja el dominio no basta: el
+ * repositorio, su README y su fichero de ejemplo son github.com tres veces y
+ * se llevarian todas las plazas.
+ */
+function recurso(u: URL): string {
+  const host = hostLimpio(u);
+  if (/^(github|gitlab|codeberg|bitbucket)\.(com|org)$/.test(host)) {
+    return `${host}/${u.pathname.split("/").filter(Boolean).slice(0, 2).join("/")}`;
+  }
+  return host;
 }
 
 /** Une varias listas sin repetir, respetando el orden de llegada. */
