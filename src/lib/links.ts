@@ -28,7 +28,11 @@ const HOSTS_RUIDO = new Set([
   "threads.net", "bsky.app", "mastodon.social", "tiktok.com", "flipboard.com",
   "reddit.com", "old.reddit.com", "getpocket.com", "digg.com", "tumblr.com",
   "amazon.com", "amazon.es", "amzn.to", "ebay.com",
-  "patreon.com", "buymeacoffee.com", "ko-fi.com", "paypal.com", "gravatar.com",
+  "patreon.com", "buymeacoffee.com", "ko-fi.com", "gravatar.com",
+  // Botones de propina del autor. Aparecen en la firma de casi cualquier
+  // blog tecnico y no tienen nada que ver con la noticia.
+  "paypal.com", "paypal.me", "venmo.com", "cash.app", "liberapay.com",
+  "opencollective.com", "gofundme.com", "donorbox.org",
   "doubleclick.net", "googletagmanager.com", "google-analytics.com",
   "feedburner.com", "feeds.feedburner.com", "polldaddy.com",
 ]);
@@ -36,6 +40,9 @@ const HOSTS_RUIDO = new Set([
 /** Secciones de navegacion del propio medio: no son la noticia. */
 const RUTAS_RUIDO =
   /^\/(tags?|topics?|categor(y|ia|ias|ies)|author|autor|autores|search|buscar|login|signin|sign-in|signup|register|subscribe|newsletter|privacy|privacidad|terms|terminos|cookies?|about|acerca|contact|contacto|feeds?|rss|amp|sitemap|advertise|publicidad|jobs|careers|shop|store)(\/|$)/i;
+
+/** Patrocinio y papeleo del repositorio: ni es la noticia ni se lee. */
+const RUTAS_SIN_VALOR = /\/(sponsors?|donate|donaciones)(\/|$)|\/(LICENSE|COPYING|NOTICE|CHANGELOG)(\.[a-z]+)?$/i;
 
 /** Enlaces de "compartir en": llevan la URL de destino como parametro. */
 const COMPARTIR = /\/(intent|sharer|share|submit)(\/|\.|$)/i;
@@ -133,6 +140,7 @@ function util(u: URL, base: URL | null): boolean {
   if (EXTENSION_ASSET.test(u.pathname)) return false;
   if (HOSTS_RUIDO.has(hostLimpio(u))) return false;
   if (RUTAS_RUIDO.test(u.pathname)) return false;
+  if (RUTAS_SIN_VALOR.test(u.pathname)) return false;
   if (COMPARTIR.test(u.pathname) && u.search.length > 1) return false;
   if (esPublicidad(u, base)) return false;
   // El propio medio enlazandose a si mismo es navegacion o "noticias
@@ -249,9 +257,14 @@ export function extraerEnlaces(html: string, urlOrigen: string, max = 6): Enlace
     const ancla = limpiarTexto(m[2]);
     if (!ancla) continue;
 
+    // "My apps", "mi blog": el autor enlazando lo suyo. Se tolera si lo que
+    // enlaza vale por si mismo (un repositorio, un paquete); si no, es firma.
+    const puntos = puntuar(u, ancla);
+    if (puntos <= 20 && /^(my|mi|mis|our|nuestro|nuestra)\s/i.test(ancla)) continue;
+
     candidatos.push({
       enlace: { url: u.toString(), texto: etiquetar(u.toString(), ancla) },
-      puntos: puntuar(u, ancla),
+      puntos,
     });
   }
 
