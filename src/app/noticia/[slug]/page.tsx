@@ -44,6 +44,7 @@ export default async function ArticlePage({ params }: Params) {
   const related = await getRelated(article);
   const html = renderMarkdown(article.body_md);
   const extra = article.extra_sources?.length ?? 0;
+  const enlaces = article.links ?? [];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -120,6 +121,40 @@ export default async function ArticlePage({ params }: Params) {
           className={`prose-news mx-auto max-w-[42rem]${empiezaConSigla(article.body_md) ? " sin-capitular" : ""}`}
           dangerouslySetInnerHTML={{ __html: html }}
         />
+
+        {/* Enlaces del original: repositorio, notas de versión, ficha del CVE... */}
+        {enlaces.length > 0 && (
+          <nav
+            aria-label="Enlaces del original"
+            className="mx-auto mt-12 max-w-[42rem] rounded-2xl border border-accent/25 bg-accent/[0.04] p-5"
+          >
+            <p className="font-sans text-xs font-bold uppercase tracking-wider text-fg">
+              Enlaces
+            </p>
+            <ul className="mt-3 space-y-2">
+              {enlaces.map((e) => (
+                <li key={e.url}>
+                  <a
+                    href={e.url}
+                    target="_blank"
+                    rel="noopener nofollow"
+                    className="group flex items-baseline gap-2 text-[0.95rem] font-sans"
+                  >
+                    <span aria-hidden="true" className="text-accent">↗</span>
+                    <span className="min-w-0">
+                      <span className="font-medium text-accent underline underline-offset-4 group-hover:opacity-80">
+                        {e.texto}
+                      </span>{" "}
+                      <span className="block truncate text-[0.7rem] text-fg-faint font-mono">
+                        {hostDe(e.url)}
+                      </span>
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
 
         {/* Transparencia Algorítmica & Fuentes */}
         <aside
@@ -212,4 +247,13 @@ export default async function ArticlePage({ params }: Params) {
       />
     </article>
   );
+}
+
+/** Solo el dominio, como pista de a donde lleva el enlace. */
+function hostDe(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
 }

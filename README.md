@@ -87,6 +87,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | `npm run ingest -- --max=3` | Solo 3 noticias nuevas |
 | `npm run ingest -- --dry` | Simula sin gastar tokens del modelo |
 | `npm run ingest -- --source=7` | Solo una fuente |
+| `npm run backfill:links` | Rellena los enlaces del original en las noticias antiguas |
+| `npm run backfill:links -- --dry` | Los muestra sin guardarlos |
 | `npx tsx scripts/check-feed.ts <url>` | Prueba un feed suelto sin tocar la base de datos |
 | `npx tsx scripts/selftest.ts` | Test de los helpers puros (dedupe, slugs, markdown) |
 

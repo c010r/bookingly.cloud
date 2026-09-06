@@ -1,6 +1,12 @@
 import { chat, parseJsonLoose } from "./llm";
 import { env } from "./env";
 import {
+  bloqueParaPrompt,
+  filtrarElegidos,
+  saneaEnlacesMd,
+  type Enlace,
+} from "./links";
+import {
   CATEGORY_PROMPT_BLOCK,
   esFueraDeFoco,
   normalizeCategory,
@@ -38,6 +44,8 @@ export type RewriteInput = {
   sourceName: string;
   content: string;
   publishedAt?: Date | null;
+  /** Enlaces sacados del original. El modelo solo puede usar estos. */
+  enlaces?: Enlace[];
 };
 
 export type RewriteResult = {
@@ -51,6 +59,8 @@ export type RewriteResult = {
   /** 0-100. El propio redactor evalua si la pieza esta lista para publicarse. */
   qualityScore: number;
   qualityNotes: string;
+  /** Los que el modelo eligio de la lista, ya verificados. */
+  enlaces: Enlace[];
   model: string;
 };
 
@@ -65,6 +75,7 @@ type RawRewrite = {
   seo_descripcion?: string;
   calidad?: unknown;
   calidad_nota?: string;
+  enlaces?: unknown;
 };
 
 /**
@@ -176,7 +187,30 @@ ESTRUCTURA DEL CUERPO (markdown)
 - Despues: el detalle, los datos, quien dice que.
 - Uno o dos subtitulos "## " si el texto lo pide. Si son 400 palabras seguidas que fluyen, no metas subtitulos por rellenar.
 - Ultimo parrafo: por que importa o que queda por ver. Sin titularlo.
-- No incluyas el titular dentro del cuerpo ni enlaces.
+- No incluyas el titular dentro del cuerpo.
+
+ENLACES
+A veces te paso una lista de ENLACES DETECTADOS: son los que llevaba la
+noticia original, ya extraidos y verificados. Al lector le sirven mas que
+cualquier parrafo, sobre todo cuando hay codigo de por medio.
+
+- Solo puedes usar URLs de esa lista, copiadas caracter a caracter. NUNCA
+  escribas una URL que no este ahi, ni la reconstruyas de memoria aunque creas
+  saberla: un enlace inventado es tan grave como una cifra inventada.
+- Si no te paso lista, no hay enlaces y el cuerpo va sin ninguno.
+- En el cuerpo, enlaza como mucho DOS de ellos, y solo en la primera mencion
+  natural de eso que enlazan, con la sintaxis markdown [texto](url). El texto
+  del enlace es la propia mencion ("el repositorio", "phi-4-mini"), no un
+  "haz clic aqui" ni la URL desnuda. Si ninguna mencion pide enlace, no
+  fuerces ninguno.
+- Ademas, en el campo "enlaces" devuelves los que valen la pena para el
+  lector, incluidos los que ya hayas enlazado en el cuerpo, con una etiqueta
+  corta en espanol que diga que es cada uno ("Repositorio en GitHub",
+  "Notas de la version", "Ficha del CVE"). Como mucho cuatro, ordenados por
+  utilidad. Los que no aporten nada, fuera: la lista vacia es una respuesta
+  valida.
+- No enlaces nunca al medio del que sale la noticia: su atribucion ya va
+  aparte.
 
 CATEGORIA
 Elige exactamente una de estas secciones (devuelve el slug):
@@ -206,13 +240,22 @@ escribas el articulo.
   "seo_titulo": "maximo 60 caracteres",
   "seo_descripcion": "maximo 155 caracteres",
   "calidad": 0-100,
-  "calidad_nota": "una frase justificando la nota"
+  "calidad_nota": "una frase justificando la nota",
+  "enlaces": [{"url": "una URL tal cual de la lista", "texto": "etiqueta corta"}]
 }`;
 
 export async function rewriteArticle(input: RewriteInput): Promise<RewriteResult> {
   const fecha = input.publishedAt ? input.publishedAt.toISOString().slice(0, 10) : "desconocida";
   // Recortamos para que la peticion quepa en el cupo por minuto del proveedor.
   const source = input.content.slice(0, env.llmMaxSourceChars);
+
+  const enlaces = input.enlaces ?? [];
+  const bloqueEnlaces = enlaces.length
+    ? `
+
+ENLACES DETECTADOS (los unicos que puedes usar, copiados tal cual)
+${bloqueParaPrompt(enlaces)}`
+    : "";
 
   const userPrompt = `NOTICIA ORIGINAL
 Medio: ${input.sourceName}
@@ -223,7 +266,7 @@ URL: ${input.sourceUrl}
 TEXTO
 """
 ${source}
-"""
+"""${bloqueEnlaces}
 
 Reescribela siguiendo tus instrucciones y devuelve solo el JSON.`;
 
@@ -246,7 +289,9 @@ Reescribela siguiendo tus instrucciones y devuelve solo el JSON.`;
   }
 
   const title = clean(parsed.titular);
-  const bodyMd = (parsed.cuerpo_markdown || "").trim();
+  // Los enlaces del cuerpo se cotejan contra la lista que se le paso: si se ha
+  // inventado una URL, aqui se queda en texto plano y no llega ni al render.
+  const bodyMd = saneaEnlacesMd((parsed.cuerpo_markdown || "").trim(), enlaces);
   if (!title || bodyMd.length < 200) {
     throw new Error("La reescritura devuelta es demasiado pobre o esta incompleta");
   }
@@ -273,6 +318,7 @@ Reescribela siguiendo tus instrucciones y devuelve solo el JSON.`;
     // La nota del modelo se corrige con senales objetivas del propio texto.
     qualityScore: applyHeuristics(modelScore, bodyMd, title),
     qualityNotes: clean(parsed.calidad_nota).slice(0, 300),
+    enlaces: filtrarElegidos(enlaces, parsed.enlaces, 4),
     model: respuesta.model,
   };
 }

@@ -101,3 +101,8 @@ CREATE TABLE IF NOT EXISTS descartes (
   motivo      TEXT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Enlaces del original que valen para el lector (repositorio, notas de la
+-- version, ficha del CVE...). Se extraen del HTML antes de limpiarlo y el
+-- modelo solo puede elegir de esa lista: aqui nunca entra una URL inventada.
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS links JSONB NOT NULL DEFAULT '[]'::jsonb;

@@ -12,7 +12,8 @@
     "db:seed": "tsx scripts/seed-sources.ts",
     "ingest": "tsx scripts/ingest.ts",
     "check:llm": "tsx scripts/check-llm.ts",
-    "dedupe:historico": "tsx scripts/dedupe-historico.ts"
+    "dedupe:historico": "tsx scripts/dedupe-historico.ts",
+    "backfill:links": "tsx scripts/backfill-links.ts"
   },
   "dependencies": {
     "@extractus/article-extractor": "^8.0.16",

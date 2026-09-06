@@ -7,6 +7,7 @@ import { LlmError, SinModelosError } from "./llm";
 import { FueraDeFocoError } from "./rewriter";
 import { attachExtraSource, findDuplicate, titleKey } from "./dedupe";
 import { env } from "./env";
+import { extraerEnlaces, unirEnlaces, type Enlace } from "./links";
 import { readme, repoContent, trendingRepos } from "./collectors/github";
 import { digestContent, lanzamientos } from "./collectors/producthunt";
 
@@ -31,6 +32,10 @@ export type FeedItem = {
   author: string | null;
   /** Si viene ya resuelto, no hace falta descargar y extraer la pagina. */
   content?: string;
+  /** HTML tal cual llega, del que se sacan los enlaces antes de limpiarlo. */
+  contentHtml?: string;
+  /** Enlaces ya conocidos: las fuentes de API los traen resueltos. */
+  links?: Enlace[];
 };
 
 const parser = new Parser({
@@ -77,6 +82,7 @@ async function githubItems(): Promise<FeedItem[]> {
       author: repo.owner,
       image: `https://opengraph.githubassets.com/1/${repo.fullName}`,
       content: repoContent(repo, texto),
+      links: [{ url: repo.url, texto: `Repositorio en GitHub: ${repo.fullName}` }],
     });
   }
   return items;
@@ -115,6 +121,7 @@ async function productHuntItems(): Promise<FeedItem[]> {
       author: null,
       image: null,
       content: digestContent(productos),
+      links: productos.slice(0, 4).map((p) => ({ url: p.url, texto: p.name })),
     },
   ];
 }
@@ -122,19 +129,22 @@ async function productHuntItems(): Promise<FeedItem[]> {
 export async function fetchFeed(source: Source): Promise<FeedItem[]> {
   const feed = await parser.parseURL(source.feed_url);
   return (feed.items || [])
-    .map((item) => {
+    .map((item): FeedItem | null => {
       const link = (item.link || item.guid || "").trim();
       if (!link || !/^https?:\/\//i.test(link)) return null;
       const dateStr = item.isoDate || item.pubDate;
       const date = dateStr ? new Date(dateStr) : null;
+      const bruto = item as unknown as Record<string, unknown>;
       return {
         title: (item.title || "").trim(),
         link,
         summary: stripHtml(item.contentSnippet || item.content || ""),
         publishedAt: date && !Number.isNaN(date.getTime()) ? date : null,
-        author: pickAuthor(item as unknown as Record<string, unknown>),
-        image: pickImage(item as unknown as Record<string, unknown>),
-      } satisfies FeedItem;
+        author: pickAuthor(bruto),
+        image: pickImage(bruto),
+        // Sin limpiar: es de donde salen los enlaces del original.
+        contentHtml: String(bruto["content:encoded"] || item.content || ""),
+      };
     })
     .filter((i): i is FeedItem => Boolean(i && i.title));
 }
@@ -142,23 +152,32 @@ export async function fetchFeed(source: Source): Promise<FeedItem[]> {
 /** Descarga el articulo completo; si falla, nos quedamos con el resumen del RSS. */
 export async function fetchArticleText(
   item: FeedItem
-): Promise<{ text: string; image: string | null; author: string | null }> {
-  // Las fuentes de API ya entregan su propio material.
-  if (item.content) return { text: item.content, image: item.image, author: item.author };
+): Promise<{ text: string; image: string | null; author: string | null; links: Enlace[] }> {
+  // Las fuentes de API ya entregan su propio material y sus propios enlaces.
+  if (item.content) {
+    return { text: item.content, image: item.image, author: item.author, links: item.links ?? [] };
+  }
+
+  // Los del resumen del feed van de red: si la extraccion falla o el medio nos
+  // bloquea, son lo unico que queda del original.
+  const delFeed = extraerEnlaces(item.contentHtml ?? "", item.link);
 
   try {
     const article = await extract(item.link);
-    const text = stripHtml(article?.content || "").trim();
+    const html = article?.content || "";
+    const text = stripHtml(html).trim();
     // Muchos feeds no traen dc:creator pero la pagina si lleva firma.
     const author = item.author ?? limpiarAutor(article?.author);
+    // El orden importa: manda la pagina completa, el feed solo completa.
+    const links = unirEnlaces(extraerEnlaces(html, item.link), delFeed);
     if (text.length > 400) {
-      return { text, image: item.image || article?.image || null, author };
+      return { text, image: item.image || article?.image || null, author, links };
     }
-    return { text: item.summary, image: item.image, author };
+    return { text: item.summary, image: item.image, author, links };
   } catch {
     // Muchos medios bloquean bots; caemos al resumen sin dramatizar.
   }
-  return { text: item.summary, image: item.image, author: item.author };
+  return { text: item.summary, image: item.image, author: item.author, links: delFeed };
 }
 
 export type IngestOptions = {
@@ -281,7 +300,7 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
       }
 
       try {
-        const { text, image, author } = await fetchArticleText(item);
+        const { text, image, author, links } = await fetchArticleText(item);
         if (text.trim().length < 200) {
           report.skipped++;
           log(`Sin texto suficiente, se salta: ${item.title}`);
@@ -294,6 +313,7 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
           sourceName: source.name,
           content: text,
           publishedAt: item.publishedAt,
+          enlaces: links.slice(0, 6),
         });
 
         // Segunda pasada de deduplicacion: el titular reescrito puede revelar
@@ -323,8 +343,8 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
               fingerprint, title_key, status, published_at, auto_published,
               title, slug, dek, body_md, tags, category,
               seo_title, seo_description, image_url, reading_minutes, model,
-              quality_score, quality_notes)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
+              quality_score, quality_notes, links)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)
            ON CONFLICT (fingerprint) DO NOTHING`,
           [
             source.id,
@@ -351,6 +371,7 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
             rewritten.model,
             rewritten.qualityScore,
             rewritten.qualityNotes,
+            JSON.stringify(rewritten.enlaces),
           ]
         );
 

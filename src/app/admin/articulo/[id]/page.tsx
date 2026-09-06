@@ -65,6 +65,27 @@ export default async function EditArticlePage({
           <p className="mt-2 text-xs text-fg-faint">{article.quality_notes}</p>
         )}
 
+        {article.links.length > 0 && (
+          <div className="mt-3 text-xs">
+            <strong className="text-fg">Enlaces del original:</strong>
+            <ul className="mt-1 list-disc space-y-0.5 pl-5">
+              {article.links.map((e) => (
+                <li key={e.url}>
+                  {e.texto} —{" "}
+                  <a
+                    href={e.url}
+                    target="_blank"
+                    rel="noopener nofollow"
+                    className="text-accent underline underline-offset-2"
+                  >
+                    {e.url}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {article.extra_sources.length > 0 && (
           <div className="mt-3 text-xs">
             <strong className="text-fg">Misma noticia en otros medios:</strong>

@@ -1,6 +1,7 @@
 import { query, queryOne } from "./db";
 import type { ExtraSource } from "./dedupe";
 import { titleKey } from "./dedupe";
+import type { Enlace } from "./links";
 
 export type Article = {
   id: number;
@@ -18,6 +19,8 @@ export type Article = {
   tags: string[];
   category: string;
   extra_sources: ExtraSource[];
+  /** Enlaces del original que valen la pena (repositorio, notas de version...). */
+  links: Enlace[];
   quality_score: number | null;
   quality_notes: string | null;
   auto_published: boolean;
@@ -33,7 +36,7 @@ export type Article = {
 };
 
 const COLUMNS = `id, source_id, source_name, source_url, source_title, source_author, source_published_at,
-  status, title, slug, dek, body_md, tags, category, extra_sources, quality_score,
+  status, title, slug, dek, body_md, tags, category, extra_sources, links, quality_score,
   quality_notes, auto_published, seo_title, seo_description, image_url,
   reading_minutes, views, model, created_at, updated_at, published_at`;
 
