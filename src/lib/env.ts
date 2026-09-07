@@ -29,9 +29,10 @@ export const env = {
   },
   /**
    * El redactor habla con cualquier API compatible con OpenAI. Por defecto,
-   * Groq: capa gratuita amplia y sin tarjeta. Si en el .env solo quedan las
-   * variables DEEPSEEK_* de la version anterior, se respetan en bloque para no
-   * romper una instalacion ya desplegada.
+   * Groq en su capa gratuita; DeepSeek de pago queda como proveedor de
+   * respaldo (LLM_FALLBACK_*) para cuando Groq agota el cupo diario. Un .env
+   * de una epoca anterior se respeta en bloque (clave, URL y modelo juntos)
+   * para no romper una instalacion ya desplegada.
    */
   get llmKey() {
     const v =
@@ -44,18 +45,23 @@ export const env = {
     return process.env.LLM_BASE_URL || "https://api.groq.com/openai/v1";
   },
   /**
-   * Lista de modelos por orden de preferencia, separados por comas. Cada uno
-   * tiene su propio cupo diario, asi que rotar entre varios multiplica lo que
-   * cabe en un dia; el cliente pasa al siguiente cuando uno se agota.
+   * Lista de modelos del proveedor principal por orden de preferencia,
+   * separados por comas. Cada uno tiene su propia bolsa diaria (Groq: 200.000
+   * tokens/dia y 1000 peticiones/dia POR MODELO), asi que rotar entre varios
+   * multiplica lo que cabe en un dia; el cliente pasa al siguiente cuando uno
+   * se agota, y si no queda ninguno escribe en el proveedor de respaldo.
    *
-   * Cada entrada admite un sufijo ":esfuerzo" con el reasoning_effort que se
-   * le manda. Va por modelo porque no coinciden: los gpt-oss aceptan
-   * low/medium/high y los qwen solo none/default. Sin sufijo no se manda nada.
+   * Cada entrada admite un sufijo ":esfuerzo" con el razonamiento que se le
+   * pide. Va por modelo porque no coinciden: los gpt-oss de Groq aceptan
+   * low/medium/high, los qwen solo none/default y deepseek-v4-flash de DeepSeek
+   * piensa por defecto con "high" (":low" recorta bastante el gasto). Sin
+   * sufijo no se manda nada y cada proveedor usa su default.
    */
   get llmModels(): ModeloLlm[] {
     const crudo = this.usaConfigAntigua
       ? process.env.DEEPSEEK_MODEL || "deepseek-chat"
-      : process.env.LLM_MODEL || "openai/gpt-oss-120b:low";
+      : process.env.LLM_MODEL ||
+        "openai/gpt-oss-120b:low,openai/gpt-oss-20b:low,qwen/qwen3.8-27b:none,qwen/qwen3.6-27b:none";
     const lista = crudo
       .split(",")
       .map((m) => m.trim())
@@ -69,9 +75,33 @@ export const env = {
     return this.llmModels[0].nombre;
   },
   /**
-   * Tokens por minuto que admite el proveedor. Es el limite que aprieta en las
-   * capas gratuitas: Groq da 8000. El cliente se autorregula para no pasarse,
-   * porque un 429 gasta peticion igual que una llamada buena. 0 lo desactiva.
+   * Proveedor de respaldo (DeepSeek de pago por defecto). El principal suele
+   * ser la capa gratuita de Groq: cuando TODOS sus modelos agotan el cupo
+   * diario, en vez de abortar la tanda se escribe aqui. Solo se activa si hay
+   * modelo y clave de respaldo configurados (LLM_FALLBACK_*).
+   */
+  get llmFallbackModel(): ModeloLlm | null {
+    const crudo = process.env.LLM_FALLBACK_MODEL;
+    if (!crudo) return null;
+    return parsearModelo(crudo);
+  },
+  get llmFallbackBaseUrl() {
+    return process.env.LLM_FALLBACK_BASE_URL || "https://api.deepseek.com";
+  },
+  get llmFallbackKey() {
+    const v = process.env.LLM_FALLBACK_API_KEY || process.env.DEEPSEEK_API_KEY;
+    // Un marcador "PENDIENTE_PON_TU_CLAVE" del bootstrap no es una clave real.
+    return v && !v.startsWith("PENDIENTE") ? v : "";
+  },
+  /** Hay con que escribir en el proveedor de respaldo. */
+  get tieneFallback() {
+    return Boolean(this.llmFallbackModel && this.llmFallbackKey);
+  },
+  /**
+   * Tokens por minuto que admite el proveedor principal. Es el limite que
+   * aprieta en las capas gratuitas: Groq da 8000. El cliente se autorregula
+   * para no pasarse, porque un 429 gasta peticion igual que una llamada buena.
+   * El proveedor de respaldo (DeepSeek de pago) no lo necesita: 0 lo desactiva.
    */
   get llmTokensPorMinuto() {
     const v = process.env.LLM_TOKENS_PER_MINUTE;
@@ -80,7 +110,8 @@ export const env = {
   /**
    * Cuanto texto del articulo original ve el redactor. Mas no siempre es
    * mejor: el cuerpo son 350-600 palabras y lo esencial de una noticia esta
-   * en los primeros parrafos. Recortar es lo que hace que quepa en el cupo.
+   * en los primeros parrafos. Recortar abarata cada llamada y evita que una
+   * pieza larga dispare el razonamiento.
    */
   get llmMaxSourceChars() {
     const v = process.env.LLM_MAX_SOURCE_CHARS;

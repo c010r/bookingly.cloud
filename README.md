@@ -1,7 +1,8 @@
 # c010r News
 
 Medio digital de noticias de tecnología. Rastrea feeds RSS, detecta cuándo varios medios
-cuentan la misma noticia, la reescribe con voz propia usando un LLM (Groq por defecto), la clasifica en una
+cuentan la misma noticia, la reescribe con voz propia usando un LLM (Groq gratis por defecto,
+y DeepSeek de pago como respaldo cuando Groq agota su cupo), la clasifica en una
 sección y decide por sí mismo si tiene calidad para publicarse.
 
 ## Cómo funciona

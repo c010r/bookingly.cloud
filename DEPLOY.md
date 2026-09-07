@@ -81,13 +81,14 @@ Todo vive en `/opt/bookingly.cloud/.env` (permisos `600`, fuera de git). Tras ed
 
 | Variable | Para qué |
 |---|---|
-| `LLM_API_KEY` | Sin ella no se reescribe nada. Gratis en <https://console.groq.com/keys> |
+| `LLM_API_KEY` | Clave del proveedor principal. Gratis en <https://console.groq.com/keys> |
 | `AUTO_PUBLISH` | `0` deja todo en borrador y devuelve el control editorial a una persona |
 | `AUTO_PUBLISH_MIN_SCORE` | Sube el listón (más estricto) o bájalo (más volumen) |
 | `INGEST_MAX_PER_RUN` | Artículos nuevos por ejecución; controla el consumo de cuota |
 | `LLM_MODEL` | Lista de modelos separados por comas, por orden de preferencia, cada uno con su `:esfuerzo` de razonamiento. Cada modelo tiene cupo diario propio; el cliente rota cuando uno se agota |
-| `LLM_BASE_URL` | Cambia de proveedor: vale cualquier API compatible con OpenAI |
-| `LLM_TOKENS_PER_MINUTE` | Cupo del proveedor. El cliente se frena solo para no pasarse. `0` lo desactiva |
+| `LLM_FALLBACK_API_KEY`, `LLM_FALLBACK_BASE_URL`, `LLM_FALLBACK_MODEL` | Proveedor de respaldo: cuando los modelos del principal agotan su cupo diario se escribe aquí en vez de abortar. Por defecto DeepSeek de pago (`deepseek-v4-flash:low`), clave en <https://platform.deepseek.com>. Sin estas variables no hay respaldo |
+| `LLM_BASE_URL` | Cambia de proveedor: vale cualquier API compatible con OpenAI. Por defecto `https://api.groq.com/openai/v1` |
+| `LLM_TOKENS_PER_MINUTE` | Cupo del proveedor principal. El cliente se frena solo para no pasarse. `0` lo desactiva (de pago o sin límite) |
 | `LLM_MAX_SOURCE_CHARS` | Texto del original que ve el redactor. Bajarlo si aparecen errores 413 |
 
 La contraseña del panel está en `/root/bookingly-credenciales.txt`. Guárdala en tu gestor y

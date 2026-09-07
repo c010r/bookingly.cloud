@@ -13,7 +13,7 @@ let clave: string;
 try {
   clave = env.llmKey;
 } catch {
-  console.error("No hay clave: define LLM_API_KEY en el .env.");
+  console.error("No hay clave principal: define LLM_API_KEY en el .env.");
   console.error("Se saca gratis en https://console.groq.com/keys");
   process.exit(1);
 }
@@ -22,6 +22,7 @@ console.log(`Proveedor: ${env.llmBaseUrl}`);
 const listado = env.llmModels.map((m) => (m.esfuerzo ? `${m.nombre}:${m.esfuerzo}` : m.nombre));
 console.log(`Modelos:   ${listado.join(", ")}`);
 console.log(`Clave:     ${clave.slice(0, 6)}…${clave.slice(-4)}`);
+console.log(`Respaldo:  ${env.tieneFallback ? `${env.llmFallbackModel!.nombre} (${env.llmFallbackBaseUrl})` : "no configurado"}`);
 
 // Que modelos estan en pausa ahora mismo y hasta cuando.
 try {

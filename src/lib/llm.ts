@@ -38,6 +38,8 @@ export class LlmError extends Error {
   }
 }
 
+type Proveedor = { baseUrl: string; key: string };
+
 /**
  * Hablamos el protocolo de OpenAI (/chat/completions) directamente, sin SDK.
  * Eso vale para Groq, DeepSeek, Gemini, OpenRouter, Cerebras o cualquier otro
@@ -46,36 +48,67 @@ export class LlmError extends Error {
  * LLM_MODEL admite una lista separada por comas. Se usa el primero disponible
  * y, cuando agota su cupo diario, se pasa al siguiente. Cada modelo tiene su
  * propia bolsa, asi que rotar multiplica lo que cabe en un dia.
+ *
+ * Si LLM_FALLBACK_MODEL y LLM_FALLBACK_API_KEY estan definidos y el proveedor
+ * principal se queda sin ningun modelo con cupo, se escribe en el de respaldo
+ * (por defecto DeepSeek de pago): la capa gratuita manda, y el de pago solo
+ * cubre el hueco mientras dura el agotamiento.
  */
 export async function chat(opts: ChatOptions): Promise<ChatResult> {
   const enPausa = await modelosEnPausa();
-  const candidatos = env.llmModels.filter((m) => !enPausa.has(m.nombre));
+  const primarios = env.llmModels.filter((m) => !enPausa.has(m.nombre));
+  const proveedor: Proveedor = { baseUrl: env.llmBaseUrl, key: env.llmKey };
+  const fallback =
+    env.tieneFallback && !enPausa.has(env.llmFallbackModel!.nombre)
+      ? {
+          modelo: env.llmFallbackModel!,
+          proveedor: { baseUrl: env.llmFallbackBaseUrl, key: env.llmFallbackKey } as Proveedor,
+        }
+      : null;
 
-  if (candidatos.length === 0) {
-    throw new SinModelosError(
-      `Sin modelos disponibles: ${env.llmModels.map((m) => m.nombre).join(", ")} agotaron su cupo diario`
+  let ultimoError: unknown = null;
+
+  if (primarios.length > 0) {
+    for (const modelo of primarios) {
+      try {
+        return { content: await llamar(modelo, opts, proveedor), model: modelo.nombre };
+      } catch (err) {
+        if (!(err instanceof LlmError) || !motivoDePausa(err)) throw err;
+        await pausar(modelo.nombre, err);
+        ultimoError = err;
+      }
+    }
+  } else {
+    ultimoError = new SinModelosError(
+      `Sin modelos principales disponibles: ${env.llmModels.map((m) => m.nombre).join(", ")} agotaron su cupo diario`
     );
   }
 
-  let ultimoError: unknown;
-  for (const modelo of candidatos) {
+  if (fallback) {
     try {
-      return { content: await llamar(modelo, opts), model: modelo.nombre };
+      const content = await llamar(fallback.modelo, opts, fallback.proveedor);
+      return { content, model: fallback.modelo.nombre };
     } catch (err) {
-      if (!(err instanceof LlmError) || !motivoDePausa(err)) throw err;
-      await pausar(modelo.nombre, err);
-      ultimoError = err;
+      if (err instanceof LlmError && motivoDePausa(err)) await pausar(fallback.modelo.nombre, err);
+      throw err;
     }
   }
-  throw ultimoError;
+
+  if (ultimoError) throw ultimoError;
+  throw new SinModelosError("Sin modelos disponibles para escribir");
 }
 
-async function llamar(modelo: ModeloLlm, opts: ChatOptions): Promise<string> {
+async function llamar(modelo: ModeloLlm, opts: ChatOptions, prov: Proveedor): Promise<string> {
+  // Holgado a proposito con DeepSeek: con un modelo que razona, el
+  // razonamiento cuenta dentro del tope de salida. Con 4000, una pieza larga
+  // se cortaba y volvia vacia o con el JSON a medias; factura solo lo que se
+  // usa. Para el resto de proveedores se mantiene el tope anterior.
+  const deepseek = /deepseek\.com/i.test(prov.baseUrl);
   const body = {
     model: modelo.nombre,
     messages: opts.messages,
     temperature: opts.temperature ?? 0.7,
-    max_tokens: opts.maxTokens ?? 4000,
+    max_tokens: opts.maxTokens ?? (deepseek ? 12000 : 4000),
     stream: false,
     ...(opts.json ? { response_format: { type: "json_object" } } : {}),
     // Sin bajarlo, un modelo que razona se gasta el cupo de salida pensando y
@@ -90,11 +123,11 @@ async function llamar(modelo: ModeloLlm, opts: ChatOptions): Promise<string> {
   );
   await esperarCupo(modelo.nombre, estimado);
 
-  const res = await fetchWithRetry(`${env.llmBaseUrl}/chat/completions`, {
+  const res = await fetchWithRetry(`${prov.baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      authorization: `Bearer ${env.llmKey}`,
+      authorization: `Bearer ${prov.key}`,
     },
     body: JSON.stringify(body),
     signal: opts.signal,
@@ -102,13 +135,62 @@ async function llamar(modelo: ModeloLlm, opts: ChatOptions): Promise<string> {
 
   const data = (await res.json()) as {
     choices?: { message?: { content?: string } }[];
-    usage?: { total_tokens?: number };
+    usage?: {
+      total_tokens?: number;
+      prompt_tokens?: number;
+      completion_tokens?: number;
+      completion_tokens_details?: { reasoning_tokens?: number };
+    };
   };
   // Apuntamos lo que ha costado de verdad; es lo que regula el ritmo.
   anotarConsumo(modelo.nombre, data.usage?.total_tokens ?? estimado);
+  registrarUso(data.usage);
   const content = data.choices?.[0]?.message?.content;
   if (!content) throw new LlmError("El modelo devolvio una respuesta vacia");
   return content;
+}
+
+// --- Medición de coste -------------------------------------------------------
+
+/**
+ * Tokens acumulados por este proceso, con el razonamiento aparte. Es lo que
+ * permite saber cuanto cuesta de verdad una tanda: el proveedor factura por
+ * tokens, no por llamadas. Se lleva aparte del regulador porque las ventanas
+ * por minuto se vacian solas y aqui lo que importa es el total.
+ */
+export type UsoTokens = {
+  prompt: number;
+  completion: number;
+  /** Parte de completion gastada en razonar (DeepSeek y otros la devuelven). */
+  razonamiento: number;
+  total: number;
+};
+
+let sesion: UsoTokens = { prompt: 0, completion: 0, razonamiento: 0, total: 0 };
+
+function registrarUso(
+  usage:
+    | {
+        total_tokens?: number;
+        prompt_tokens?: number;
+        completion_tokens?: number;
+        completion_tokens_details?: { reasoning_tokens?: number };
+      }
+    | undefined
+): void {
+  if (!usage) return;
+  sesion.prompt += usage.prompt_tokens ?? 0;
+  sesion.completion += usage.completion_tokens ?? 0;
+  sesion.razonamiento += usage.completion_tokens_details?.reasoning_tokens ?? 0;
+  sesion.total += usage.total_tokens ?? (usage.prompt_tokens ?? 0) + (usage.completion_tokens ?? 0);
+}
+
+export function usoDeSesion(): UsoTokens {
+  return { ...sesion };
+}
+
+export function reiniciarUsoSesion(): void {
+  sesion = { prompt: 0, completion: 0, razonamiento: 0, total: 0 };
 }
 
 // --- Rotacion entre modelos -------------------------------------------------
@@ -186,7 +268,8 @@ async function pausar(modelo: string, err: LlmError): Promise<void> {
 
 /**
  * Las capas gratuitas no limitan tanto el numero de llamadas como los tokens
- * que caben en cada minuto: Groq da 8000 por modelo. Pasarse no devuelve un
+ * que caben en cada minuto (Groq da 8000 por modelo); DeepSeek de pago no lo
+ * aprieta y se desactiva con LLM_TOKENS_PER_MINUTE=0. Pasarse no devuelve un
  * aviso sino un 429 que gasta peticion igual, asi que en vez de chocar y
  * reintentar, esperamos antes de llamar.
  *
