@@ -9,7 +9,15 @@ import { addSource, deactivateSource } from "../src/lib/repo";
 import { closePool } from "../src/lib/db";
 import { fetchFeed } from "../src/lib/ingest";
 
-type Feed = { name: string; feed: string; site: string; lang: string; kind?: string };
+type Feed = {
+  name: string;
+  feed: string;
+  site: string;
+  lang: string;
+  kind?: string;
+  /** Ventana de frescura propia en horas (blogs de analisis publican cada pocos dias). */
+  maxAgeHours?: number;
+};
 
 /** Medios generalistas de tecnologia en ingles. */
 const EN_GENERAL: Feed[] = [
@@ -146,10 +154,13 @@ const ES: Feed[] = [
  * rechazar gastando cupo: se deja solo por el punado de entradas con noticia.
  */
 const PROMPTS: Feed[] = [
-  { name: "Simon Willison", feed: "https://simonwillison.net/atom/everything/", site: "https://simonwillison.net", lang: "en" },
-  { name: "Latent Space", feed: "https://www.latent.space/feed", site: "https://www.latent.space", lang: "en" },
-  { name: "Interconnects", feed: "https://www.interconnects.ai/feed", site: "https://www.interconnects.ai", lang: "en" },
-  { name: "The Rundown AI", feed: "https://www.therundown.ai/feed", site: "https://www.therundown.ai", lang: "en" },
+  // Blogs de analisis: no son noticias del dia, se publican cada pocos dias o
+  // semanas. Por eso llevan ventana de frescura propia (max_age_hours), si no
+  // la ingesta los descartaria como "caducados" antes de llegar al redactor.
+  { name: "Simon Willison", feed: "https://simonwillison.net/atom/everything/", site: "https://simonwillison.net", lang: "en", maxAgeHours: 120 },
+  { name: "Latent Space", feed: "https://www.latent.space/feed", site: "https://www.latent.space", lang: "en", maxAgeHours: 240 },
+  { name: "Interconnects", feed: "https://www.interconnects.ai/feed", site: "https://www.interconnects.ai", lang: "en", maxAgeHours: 336 },
+  { name: "The Rundown AI", feed: "https://www.therundown.ai/feed", site: "https://www.therundown.ai", lang: "en", maxAgeHours: 72 },
   { name: "r/PromptEngineering", feed: "https://www.reddit.com/r/PromptEngineering/.rss", site: "https://www.reddit.com/r/PromptEngineering/", lang: "en" },
 ];
 
@@ -194,7 +205,7 @@ const ALL = [...EN_GENERAL, ...EN_COMMUNITY, ...EN_NICHE, ...IA, ...DESCUBRIMIEN
 const check = process.argv.includes("--check");
 
 for (const f of ALL) {
-  await addSource(f.name, f.feed, f.site, f.lang, f.kind ?? "rss");
+  await addSource(f.name, f.feed, f.site, f.lang, f.kind ?? "rss", f.maxAgeHours ?? null);
   if (!check) {
     console.log(`ok    ${f.name}`);
     continue;
@@ -212,6 +223,7 @@ for (const f of ALL) {
       lang: f.lang,
       active: true,
       kind: "rss",
+      max_age_hours: f.maxAgeHours ?? null,
     });
     console.log(`ok    ${f.name.padEnd(26)} ${items.length} entradas`);
   } catch (err) {

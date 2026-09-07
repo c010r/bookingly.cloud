@@ -20,6 +20,8 @@ export type Source = {
   active: boolean;
   /** "rss" para feeds; "github" se consulta por API. */
   kind: string;
+  /** Ventana de frescura propia (horas). null = usar la global del .env. */
+  max_age_hours: number | null;
 };
 
 export type FeedItem = {
@@ -52,7 +54,7 @@ const parser = new Parser({
 
 export async function listSources(onlyActive = true): Promise<Source[]> {
   return query<Source>(
-    `SELECT id, name, feed_url, site_url, lang, active, kind
+    `SELECT id, name, feed_url, site_url, lang, active, kind, max_age_hours
        FROM sources
       ${onlyActive ? "WHERE active = TRUE" : ""}
       ORDER BY name ASC`
@@ -217,7 +219,6 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
   const minScore = env.autoPublishMinScore;
   const log = opts.onProgress ?? (() => {});
   const horasMax = opts.maxAgeHours ?? env.maxAgeHours;
-  const limiteFrescura = Date.now() - horasMax * 3_600_000;
   const report: IngestReport = {
     seen: 0,
     created: 0,
@@ -251,6 +252,10 @@ export async function runIngest(opts: IngestOptions = {}): Promise<IngestReport>
       log(msg);
       continue;
     }
+
+    // La ventana de frescura la puede alargar la propia fuente (analisis,
+    // newsletters) con max_age_hours; sin definir, la global del .env.
+    const limiteFrescura = Date.now() - (source.max_age_hours ?? horasMax) * 3_600_000;
 
     for (const item of items) {
       if (report.created >= max) break outer;

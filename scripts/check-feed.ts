@@ -20,6 +20,7 @@ const items = await fetchFeed({
   lang: "en",
   active: true,
   kind: "rss",
+  max_age_hours: null,
 });
 
 console.log(`${items.length} entradas encontradas.\n`);

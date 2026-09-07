@@ -77,6 +77,13 @@ CREATE INDEX IF NOT EXISTS articles_views_idx
 -- Tipo de fuente: casi todas son RSS, pero algunas (GitHub) se consultan por API.
 ALTER TABLE sources ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'rss';
 
+-- Ventana de frescura propia de la fuente, en horas. La mayoria no la define y
+-- usa la global INGEST_MAX_AGE_HOURS (24 h); los blogs y newsletters de analisis
+-- (p. ej. los de prompts) publican cada pocos dias y necesitan una ventana mas
+-- amplia para que sus piezas no se descarten por "caducadas" antes de llegar al
+-- redactor.
+ALTER TABLE sources ADD COLUMN IF NOT EXISTS max_age_hours INTEGER;
+
 -- Firma del articulo original, para atribuir a quien lo escribio.
 ALTER TABLE articles ADD COLUMN IF NOT EXISTS source_author TEXT;
 
