@@ -138,6 +138,22 @@ const ES: Feed[] = [
 ];
 
 /**
+ * Noticias y analisis sobre prompts y uso practico de modelos: la otra pata
+ * de la IA que cubre el medio. Simon Willison es el que mas publica al dia;
+ * Latent Space e Interconnects son newsletters semanales de ingenieria con
+ * material largo que el redactor destila; The Rundown AI es el resumen diario.
+ * Reddit trae mucho ruido de preguntas y trucos que el filtro editorial va a
+ * rechazar gastando cupo: se deja solo por el punado de entradas con noticia.
+ */
+const PROMPTS: Feed[] = [
+  { name: "Simon Willison", feed: "https://simonwillison.net/atom/everything/", site: "https://simonwillison.net", lang: "en" },
+  { name: "Latent Space", feed: "https://www.latent.space/feed", site: "https://www.latent.space", lang: "en" },
+  { name: "Interconnects", feed: "https://www.interconnects.ai/feed", site: "https://www.interconnects.ai", lang: "en" },
+  { name: "The Rundown AI", feed: "https://www.therundown.ai/feed", site: "https://www.therundown.ai", lang: "en" },
+  { name: "r/PromptEngineering", feed: "https://www.reddit.com/r/PromptEngineering/.rss", site: "https://www.reddit.com/r/PromptEngineering/", lang: "en" },
+];
+
+/**
  * Fuentes retiradas de la linea editorial. El medio se lee para trabajar, no
  * para comprar: se van las de consumo, videojuegos y divulgacion generalista,
  * que traian producto de tienda, motor, salud y sociedad. Filtrarlas con el
@@ -174,7 +190,7 @@ const RETIRADAS: string[] = [
   "https://api.producthunt.com/v2/api/graphql",
 ];
 
-const ALL = [...EN_GENERAL, ...EN_COMMUNITY, ...EN_NICHE, ...IA, ...DESCUBRIMIENTO, ...ES];
+const ALL = [...EN_GENERAL, ...EN_COMMUNITY, ...EN_NICHE, ...IA, ...DESCUBRIMIENTO, ...ES, ...PROMPTS];
 const check = process.argv.includes("--check");
 
 for (const f of ALL) {
