@@ -66,36 +66,54 @@ export async function chat(opts: ChatOptions): Promise<ChatResult> {
         }
       : null;
 
-  let ultimoError: unknown = null;
-
-  if (primarios.length > 0) {
-    for (const modelo of primarios) {
+  // El respaldo solo se prueba una vez: si ya fallo, no se insiste con el mismo.
+  let fallbackProbado = false;
+  async function conRespaldo(err: unknown, trasError: () => never): Promise<ChatResult> {
+    if (fallback && !fallbackProbado) {
+      fallbackProbado = true;
       try {
-        return { content: await llamar(modelo, opts, proveedor), model: modelo.nombre };
-      } catch (err) {
-        if (!(err instanceof LlmError) || !motivoDePausa(err)) throw err;
-        await pausar(modelo.nombre, err);
-        ultimoError = err;
+        const content = await llamar(fallback.modelo, opts, fallback.proveedor);
+        return { content, model: fallback.modelo.nombre };
+      } catch (err2) {
+        if (err2 instanceof LlmError && motivoDePausa(err2)) await pausar(fallback.modelo.nombre, err2);
       }
     }
-  } else {
+    return trasError();
+  }
+
+  let ultimoError: unknown = null;
+
+  if (primarios.length === 0) {
     ultimoError = new SinModelosError(
       `Sin modelos principales disponibles: ${env.llmModels.map((m) => m.nombre).join(", ")} agotaron su cupo diario`
     );
+    return conRespaldo(ultimoError, () => {
+      throw ultimoError;
+    });
   }
 
-  if (fallback) {
+  for (const modelo of primarios) {
     try {
-      const content = await llamar(fallback.modelo, opts, fallback.proveedor);
-      return { content, model: fallback.modelo.nombre };
+      return { content: await llamar(modelo, opts, proveedor), model: modelo.nombre };
     } catch (err) {
-      if (err instanceof LlmError && motivoDePausa(err)) await pausar(fallback.modelo.nombre, err);
-      throw err;
+      if (err instanceof LlmError && motivoDePausa(err)) {
+        await pausar(modelo.nombre, err);
+        ultimoError = err;
+        continue; // cupo agotado: se prueba el siguiente modelo del principal
+      }
+      if (err instanceof LlmError && (err.status === 401 || err.status === 403)) throw err;
+      // Fallo no pausable del principal (un 429 de otro tipo, un 5xx, un tope
+      // de OTPM...): antes de rendirse se prueba el proveedor de respaldo.
+      return conRespaldo(err, () => {
+        throw err;
+      });
     }
   }
 
-  if (ultimoError) throw ultimoError;
-  throw new SinModelosError("Sin modelos disponibles para escribir");
+  // Aqui solo se llega si todos los modelos principales agotaron el cupo.
+  return conRespaldo(ultimoError, () => {
+    throw ultimoError;
+  });
 }
 
 async function llamar(modelo: ModeloLlm, opts: ChatOptions, prov: Proveedor): Promise<string> {
