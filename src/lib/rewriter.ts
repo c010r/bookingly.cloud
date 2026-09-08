@@ -113,6 +113,11 @@ COMO NO ESCRIBES
 - Sin cerrar con una moraleja tipo "solo el tiempo dira".
 
 EL IDIOMA Y LAS CIFRAS
+El original puede venir en ingles, chino, japones, coreano o cualquier idioma:
+da igual. La nota sale SIEMPRE entera en espanol, incluidos el titular y la
+entradilla. Devolver un texto que conserve el idioma del original, aunque sea
+solo parte, es un error grave: esa pieza no se publica.
+
 Casi todo lo que te llega esta en ingles y el sitio se lee en espanol. Traducir
 no es opcional ni parcial: no dejas una sola palabra inglesa suelta en medio de
 una frase espanola. Se escribe adquisicion, no "acquisition"; ronda de
@@ -252,12 +257,23 @@ export async function rewriteArticle(input: RewriteInput): Promise<RewriteResult
   const enlaces = input.enlaces ?? [];
   const bloqueEnlaces = enlaces.length
     ? `
-
+ 
 ENLACES DETECTADOS (los unicos que puedes usar, copiados tal cual)
 ${bloqueParaPrompt(enlaces)}`
     : "";
 
-  const userPrompt = `NOTICIA ORIGINAL
+  const avisoIdioma = (intento: number) =>
+    intento === 0
+      ? ""
+      : `
+
+RECORDATORIO (reintento ${intento}): la pieza anterior NO estaba en espanol y se ha descartado. Reescribela entera de nuevo, en espanol, sin arrastrar el idioma del original.`;
+
+  // Un original en chino u otro alfabeto a veces se cuela sin traducir. Se
+  // reintenta (hasta 3 veces) antes de darla por buena; nada llega a publicarse
+  // con el texto en el idioma equivocado.
+  for (let intento = 0; intento < 3; intento++) {
+    const userPrompt = `NOTICIA ORIGINAL
 Medio: ${input.sourceName}
 Titular original: ${input.sourceTitle}
 Fecha: ${fecha}
@@ -266,61 +282,77 @@ URL: ${input.sourceUrl}
 TEXTO
 """
 ${source}
-"""${bloqueEnlaces}
+"""${bloqueEnlaces}${avisoIdioma(intento)}
 
 Reescribela siguiendo tus instrucciones y devuelve solo el JSON.`;
 
-  const respuesta = await chat({
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: userPrompt },
-    ],
-    json: true,
-    // Algo de temperatura ayuda a que no todas las piezas suenen igual.
-    temperature: 0.85,
-  });
+    const respuesta = await chat({
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userPrompt },
+      ],
+      json: true,
+      // Algo de temperatura ayuda a que no todas las piezas suenen igual.
+      temperature: 0.85,
+    });
 
-  const parsed = parseJsonLoose<RawRewrite>(respuesta.content);
+    const parsed = parseJsonLoose<RawRewrite>(respuesta.content);
 
-  // Antes de exigir titular y cuerpo: si el modelo la rechaza, no los habra
-  // escrito, y ese es justamente el ahorro.
-  if (esRechazo(parsed)) {
-    throw new FueraDeFocoError(clean(parsed.calidad_nota) || "no encaja en ninguna seccion");
+    // Antes de exigir titular y cuerpo: si el modelo la rechaza, no los habra
+    // escrito, y ese es justamente el ahorro.
+    if (esRechazo(parsed)) {
+      throw new FueraDeFocoError(clean(parsed.calidad_nota) || "no encaja en ninguna seccion");
+    }
+
+    const title = clean(parsed.titular);
+    // Los enlaces del cuerpo se cotejan contra la lista que se le paso: si se ha
+    // inventado una URL, aqui se queda en texto plano y no llega ni al render.
+    const bodyMd = saneaEnlacesMd((parsed.cuerpo_markdown || "").trim(), enlaces);
+    if (!title || bodyMd.length < 200) {
+      throw new Error("La reescritura devuelta es demasiado pobre o esta incompleta");
+    }
+
+    if (!esEspanol(title) || !esEspanol(bodyMd)) continue;
+
+    const tags = Array.isArray(parsed.etiquetas)
+      ? parsed.etiquetas
+          .filter((t): t is string => typeof t === "string")
+          .map((t) => t.trim().toLowerCase())
+          .filter(Boolean)
+          .slice(0, 5)
+      : [];
+
+    const dek = clean(parsed.entradilla).slice(0, 240);
+    const modelScore = clampScore(parsed.calidad);
+
+    return {
+      title,
+      dek,
+      bodyMd,
+      tags,
+      category: normalizeCategory(parsed.categoria),
+      seoTitle: (clean(parsed.seo_titulo) || title).slice(0, 70),
+      seoDescription: (clean(parsed.seo_descripcion) || dek).slice(0, 160),
+      // La nota del modelo se corrige con senales objetivas del propio texto.
+      qualityScore: applyHeuristics(modelScore, bodyMd, title),
+      qualityNotes: clean(parsed.calidad_nota).slice(0, 300),
+      enlaces: filtrarElegidos(enlaces, parsed.enlaces, 4),
+      model: respuesta.model,
+    };
   }
+  throw new Error("El redactor no consiguio escribir la pieza en espanol");
+}
 
-  const title = clean(parsed.titular);
-  // Los enlaces del cuerpo se cotejan contra la lista que se le paso: si se ha
-  // inventado una URL, aqui se queda en texto plano y no llega ni al render.
-  const bodyMd = saneaEnlacesMd((parsed.cuerpo_markdown || "").trim(), enlaces);
-  if (!title || bodyMd.length < 200) {
-    throw new Error("La reescritura devuelta es demasiado pobre o esta incompleta");
-  }
+/**
+ * El sitio publica en espanol. Si el texto arrastra mas de un par de caracteres
+ * de un alfabeto ajeno al latino (chino, japones, coreano, cirilico, arabe,
+ * tailandes...), el redactor copio el idioma del original y esa pieza no vale.
+ */
+const OTROS_ALFABETOS =
+  /[\u3000-\u303f\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af\u0400-\u04ff\u0600-\u06ff\u0e00-\u0e7f]/g;
 
-  const tags = Array.isArray(parsed.etiquetas)
-    ? parsed.etiquetas
-        .filter((t): t is string => typeof t === "string")
-        .map((t) => t.trim().toLowerCase())
-        .filter(Boolean)
-        .slice(0, 5)
-    : [];
-
-  const dek = clean(parsed.entradilla).slice(0, 240);
-  const modelScore = clampScore(parsed.calidad);
-
-  return {
-    title,
-    dek,
-    bodyMd,
-    tags,
-    category: normalizeCategory(parsed.categoria),
-    seoTitle: (clean(parsed.seo_titulo) || title).slice(0, 70),
-    seoDescription: (clean(parsed.seo_descripcion) || dek).slice(0, 160),
-    // La nota del modelo se corrige con senales objetivas del propio texto.
-    qualityScore: applyHeuristics(modelScore, bodyMd, title),
-    qualityNotes: clean(parsed.calidad_nota).slice(0, 300),
-    enlaces: filtrarElegidos(enlaces, parsed.enlaces, 4),
-    model: respuesta.model,
-  };
+function esEspanol(texto: string): boolean {
+  return (texto.match(OTROS_ALFABETOS) ?? []).length <= 3;
 }
 
 /** Muletillas que delatan texto de IA; cada una descuenta puntos. */

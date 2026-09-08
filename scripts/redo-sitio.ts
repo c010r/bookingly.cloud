@@ -33,6 +33,13 @@ const max = Number(flag("max") ?? 0);
 const concurrency = Math.max(1, Number(flag("concurrency") ?? 4));
 const salida = flag("salida") ?? "/tmp/redo-sitio.jsonl";
 const MODELO = env.llmModels[0]?.nombre ?? "deepseek-v4-flash";
+// --ids=1345,1305 fuerza reescribir esas notas aunque ya las haya escrito el
+// modelo objetivo (util para arreglar piezas concretas mal escritas).
+const ids = (flag("ids") ?? "")
+  .split(",")
+  .map((s) => Number(s.trim()))
+  .filter((n) => Number.isFinite(n));
+const forzar = ids.length > 0;
 
 // Precios de deepseek-v4-flash (USD por 1M de tokens, sin cache en entrada).
 const PRECIO_IN = { offpeak: 0.22, peak: 0.44 };
@@ -164,6 +171,9 @@ async function unaNota(fila: Fila) {
     });
 
     // No se toca el slug ni la fecha de publicacion: la URL y el archivo viven.
+    // Con --ids se ignora el filtro de modelo para poder reescribir una pieza
+    // concreta ya escrita por el modelo objetivo.
+    const guardaModelo = forzar ? "" : " AND model IS DISTINCT FROM $12";
     await query(
       `UPDATE articles
           SET title = $2, dek = $3, body_md = $4, tags = $5, category = $6,
@@ -173,7 +183,7 @@ async function unaNota(fila: Fila) {
               reading_minutes = GREATEST(1, round(
                 array_length(regexp_split_to_array(trim($4), '\\s+'), 1) / 200.0)::int),
               updated_at = now()
-        WHERE id = $1 AND model IS DISTINCT FROM $12`,
+        WHERE id = $1${guardaModelo}`,
       [
         fila.id,
         r.title,
@@ -200,6 +210,10 @@ async function unaNota(fila: Fila) {
 }
 
 async function main() {
+  const condicion = forzar
+    ? "a.status = 'published' AND a.id = ANY($1::int[])"
+    : "a.status = 'published' AND a.model IS DISTINCT FROM $1";
+  const params: unknown[] = forzar ? [ids] : [MODELO];
   const filas = await query<Fila>(
     `SELECT a.id, a.slug, a.source_name, a.source_url, a.source_title,
             a.source_published_at, a.source_author,
@@ -207,10 +221,9 @@ async function main() {
             COALESCE(a.links, '[]'::jsonb)::text AS links,
             a.model
        FROM articles a
-      WHERE a.status = 'published'
-        AND a.model IS DISTINCT FROM $1
+      WHERE ${condicion}
       ORDER BY a.published_at DESC`,
-    [MODELO]
+    params
   );
   const ya = hechas();
   const pendientes = filas.filter((f) => !ya.has(f.id));
