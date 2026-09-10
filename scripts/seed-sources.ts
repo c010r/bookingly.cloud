@@ -30,6 +30,10 @@ const EN_GENERAL: Feed[] = [
   { name: "MIT Technology Review", feed: "https://www.technologyreview.com/feed/", site: "https://www.technologyreview.com", lang: "en" },
   { name: "IEEE Spectrum", feed: "https://spectrum.ieee.org/feeds/feed.rss", site: "https://spectrum.ieee.org", lang: "en" },
   { name: "Slashdot", feed: "https://rss.slashdot.org/Slashdot/slashdotMain", site: "https://slashdot.org", lang: "en" },
+  // Cubre Microsoft, Amazon y el ecosistema cloud de Seattle antes que nadie.
+  // Contrapartida: es un medio local, asi que mezcla biotecnologia, inmobiliario
+  // y opinion de la ciudad que el filtro editorial va a rechazar gastando cupo.
+  { name: "GeekWire", feed: "https://www.geekwire.com/feed/", site: "https://www.geekwire.com", lang: "en" },
 ];
 
 /** Comunidad y agregadores: buenos para detectar temas antes que los medios. */
@@ -102,6 +106,11 @@ const DESCUBRIMIENTO: Feed[] = [
   { name: "The Register", feed: "https://www.theregister.com/headlines.atom", site: "https://www.theregister.com", lang: "en" },
   { name: "Red Hat Enable Sysadmin", feed: "https://www.redhat.com/sysadmin/rss.xml", site: "https://www.redhat.com/sysadmin", lang: "en" },
   { name: "Dev.to", feed: "https://dev.to/feed", site: "https://dev.to", lang: "en" },
+  // ITPro (Future plc) escribe para quien decide la compra y el despliegue en
+  // empresa. Sirve el articulo entero en el feed, no el resumen. Ojo, buena
+  // parte son informes de encuesta pagados por fabricantes: noticia poca.
+  // El feed anunciado (/feed) da 404; el que responde es /feeds/all.
+  { name: "ITPro", feed: "https://www.itpro.com/feeds/all", site: "https://www.itpro.com", lang: "en" },
 
   // Reddit limita por frecuencia, no bloquea: midiendo desde el servidor
   // responde una de cada tres o cuatro veces, incluso espaciando 20 s. Se
@@ -162,6 +171,13 @@ const PROMPTS: Feed[] = [
   { name: "Interconnects", feed: "https://www.interconnects.ai/feed", site: "https://www.interconnects.ai", lang: "en", maxAgeHours: 336 },
   { name: "The Rundown AI", feed: "https://www.therundown.ai/feed", site: "https://www.therundown.ai", lang: "en", maxAgeHours: 72 },
   { name: "r/PromptEngineering", feed: "https://www.reddit.com/r/PromptEngineering/.rss", site: "https://www.reddit.com/r/PromptEngineering/", lang: "en" },
+  // Foro oficial de OpenAI, categoria de prompting. Publica poco (una entrada
+  // por semana larga, de ahi la ventana amplia) y arrastra el ruido de
+  // cualquier foro de soporte: errores, capturas y "kindly help". Lo que
+  // justifica tenerlo son los hilos donde alguien mide algo, por ejemplo si
+  // una peticion en lenguaje natural rinde mas que un prompt estructurado,
+  // material que no publica ningun medio.
+  { name: "OpenAI Community · Prompting", feed: "https://community.openai.com/c/prompting/8.rss", site: "https://community.openai.com/c/prompting/8", lang: "en", maxAgeHours: 336 },
 ];
 
 /**

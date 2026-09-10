@@ -118,6 +118,17 @@ da igual. La nota sale SIEMPRE entera en espanol, incluidos el titular y la
 entradilla. Devolver un texto que conserve el idioma del original, aunque sea
 solo parte, es un error grave: esa pieza no se publica.
 
+Hay UNA excepcion, y solo una: el prompt en si. Cuando la noticia va de un
+prompt concreto y lo reproduces, lo copias LITERAL en el idioma en que se
+escribio, dentro de un bloque de codigo con tres comillas invertidas. Un
+prompt traducido ya no es ese prompt: el modelo responde a las palabras
+exactas, y cambiarlas cambia el resultado. Traducirlo seria darle al lector
+algo que no funciona. Alrededor del bloque, todo tu texto sigue en espanol:
+lo presentas, explicas que hace y por que importa, y si alguna parte necesita
+aclaracion la glosas fuera del bloque, nunca dentro. Esto vale para el prompt
+citado, no para el articulo: no es permiso para dejar frases sueltas en
+ingles porque hablen de IA.
+
 Casi todo lo que te llega esta en ingles y el sitio se lee en espanol. Traducir
 no es opcional ni parcial: no dejas una sola palabra inglesa suelta en medio de
 una frase espanola. Se escribe adquisicion, no "acquisition"; ronda de
@@ -351,8 +362,18 @@ Reescribela siguiendo tus instrucciones y devuelve solo el JSON.`;
 const OTROS_ALFABETOS =
   /[\u3000-\u303f\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af\u0400-\u04ff\u0600-\u06ff\u0e00-\u0e7f]/g;
 
+/**
+ * Los bloques de codigo van literales a proposito: ahi es donde se copia el
+ * prompt, que se deja en su idioma porque traducirlo lo estropea. Si el
+ * detector mirase dentro, un prompt en chino o japones se leeria como "el
+ * redactor no ha traducido" y tumbaria la pieza tres veces seguidas, gastando
+ * cupo en reintentos que no pueden salir bien.
+ */
+const BLOQUES_DE_CODIGO = /```[\s\S]*?```|`[^`]*`/g;
+
 function esEspanol(texto: string): boolean {
-  return (texto.match(OTROS_ALFABETOS) ?? []).length <= 3;
+  const prosa = texto.replace(BLOQUES_DE_CODIGO, " ");
+  return (prosa.match(OTROS_ALFABETOS) ?? []).length <= 3;
 }
 
 /** Muletillas que delatan texto de IA; cada una descuenta puntos. */
